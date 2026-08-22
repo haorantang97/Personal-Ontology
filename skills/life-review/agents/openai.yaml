@@ -1,0 +1,6 @@
+interface:
+  display_name: "Life Review / 人生回顾"
+  short_description: "Life interviews and archival / 人生访谈与归档"
+  default_prompt: "Use $life-review to continue my life review and choose the interview or archival stage. / 使用 $life-review 继续我的人生回顾，并判断当前属于采访还是归档环节。"
+policy:
+  allow_implicit_invocation: true
