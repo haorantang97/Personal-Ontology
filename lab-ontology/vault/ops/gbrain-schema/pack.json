@@ -1,0 +1,240 @@
+{
+  "api_version": "gbrain-schema-pack-v1",
+  "name": "agent-decision-memory",
+  "version": "1.1.1",
+  "description": "Agent decision memory with Raw, candidate-evidence, reusable-result, and living-project layers; module-aware retrieval; durable decisions; source-family independence; periodic audits; and approval-gated multi-agent maintenance.",
+  "author": "tanghaoran",
+  "gbrain_min_version": "0.42.0",
+  "extends": null,
+  "borrow_from": [],
+  "page_types": [
+    {
+      "name": "project",
+      "primitive": "concept",
+      "path_prefixes": [
+        "projects/"
+      ],
+      "aliases": [],
+      "extractable": false,
+      "expert_routing": false
+    },
+    {
+      "name": "decision",
+      "primitive": "annotation",
+      "path_prefixes": [
+        "decisions/"
+      ],
+      "aliases": [],
+      "extractable": false,
+      "expert_routing": false
+    },
+    {
+      "name": "methodology",
+      "primitive": "concept",
+      "path_prefixes": [
+        "methods/"
+      ],
+      "aliases": [],
+      "extractable": false,
+      "expert_routing": false
+    },
+    {
+      "name": "synthesis",
+      "primitive": "annotation",
+      "path_prefixes": [
+        "syntheses/"
+      ],
+      "aliases": [],
+      "extractable": false,
+      "expert_routing": false
+    },
+    {
+      "name": "concept",
+      "primitive": "concept",
+      "path_prefixes": [
+        "concepts/"
+      ],
+      "aliases": [],
+      "extractable": false,
+      "expert_routing": false
+    },
+    {
+      "name": "source",
+      "primitive": "media",
+      "path_prefixes": [
+        "sources/"
+      ],
+      "aliases": [],
+      "extractable": false,
+      "expert_routing": false
+    }
+  ],
+  "link_types": [
+    {
+      "name": "derived_from",
+      "inverse": "supports"
+    },
+    {
+      "name": "supports",
+      "inverse": "derived_from"
+    },
+    {
+      "name": "applies_to",
+      "inverse": "uses"
+    },
+    {
+      "name": "contradicts",
+      "inverse": "contradicts"
+    },
+    {
+      "name": "supersedes",
+      "inverse": "superseded_by"
+    },
+    {
+      "name": "depends_on",
+      "inverse": "required_by"
+    },
+    {
+      "name": "related_to",
+      "inverse": "related_to"
+    }
+  ],
+  "frontmatter_links": [
+    {
+      "page_type": "project",
+      "fields": [
+        "evidence"
+      ],
+      "link_type": "derived_from"
+    },
+    {
+      "page_type": "decision",
+      "fields": [
+        "evidence"
+      ],
+      "link_type": "derived_from"
+    },
+    {
+      "page_type": "methodology",
+      "fields": [
+        "evidence"
+      ],
+      "link_type": "derived_from"
+    },
+    {
+      "page_type": "synthesis",
+      "fields": [
+        "evidence"
+      ],
+      "link_type": "derived_from"
+    },
+    {
+      "page_type": "concept",
+      "fields": [
+        "evidence"
+      ],
+      "link_type": "derived_from"
+    },
+    {
+      "page_type": "source",
+      "fields": [
+        "derived_pages"
+      ],
+      "link_type": "supports"
+    },
+    {
+      "page_type": "project",
+      "fields": [
+        "related"
+      ],
+      "link_type": "related_to"
+    },
+    {
+      "page_type": "decision",
+      "fields": [
+        "related"
+      ],
+      "link_type": "related_to"
+    },
+    {
+      "page_type": "methodology",
+      "fields": [
+        "related"
+      ],
+      "link_type": "related_to"
+    },
+    {
+      "page_type": "synthesis",
+      "fields": [
+        "related"
+      ],
+      "link_type": "related_to"
+    },
+    {
+      "page_type": "concept",
+      "fields": [
+        "related"
+      ],
+      "link_type": "related_to"
+    }
+  ],
+  "takes_kinds": [
+    "fact",
+    "take",
+    "bet",
+    "hunch"
+  ],
+  "enrichable_types": [],
+  "phases": [],
+  "calibration_domains": [],
+  "filing_rules": [
+    {
+      "kind": "project",
+      "directory": "projects/",
+      "examples": [
+        "projects/timeloom"
+      ],
+      "description": "Living current project truth: objectives, constraints, confirmed state, pending items, and decisions still affecting future work. May be incrementally updated by any Agent through the approval gateway; excludes task logs."
+    },
+    {
+      "kind": "decision",
+      "directory": "decisions/",
+      "examples": [
+        "decisions/example-choice"
+      ],
+      "description": "Rare, durable commitments that constrain future actions. Requires rationale, rejected alternatives, scope, implementation location, lifecycle state, and explicit revisit triggers. Excludes approvals and micro-decisions."
+    },
+    {
+      "kind": "methodology",
+      "directory": "methods/",
+      "examples": [
+        "methods/high-information-interview-method"
+      ],
+      "description": "Reusable procedure an agent can execute, including inputs, steps, output contract, boundaries, failure conditions, maturity, and evidence limits."
+    },
+    {
+      "kind": "synthesis",
+      "directory": "syntheses/",
+      "examples": [
+        "syntheses/memoir-product-strategy"
+      ],
+      "description": "Cross-independent-source conclusion that narrows choices. Must distinguish evidence, inference, confidence, contradictions, invalid uses, and module-to-global promotion conditions."
+    },
+    {
+      "kind": "concept",
+      "directory": "concepts/",
+      "examples": [
+        "concepts/sales-listening-adaptability"
+      ],
+      "description": "Stable mechanism repeatedly used in judgment and not better represented as a method, synthesis, decision, or project."
+    },
+    {
+      "kind": "source",
+      "directory": "sources/",
+      "examples": [
+        "sources/2024-06-30-douyin-he-laoshi-short-video-ip"
+      ],
+      "description": "Curated evidence and candidate-claim pages with neutral semantic titles, provenance, source-family independence, maturity, allowed uses, evidence gaps, and optional derived results. On-demand retrieval only."
+    }
+  ]
+}

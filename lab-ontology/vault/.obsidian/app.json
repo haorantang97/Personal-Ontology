@@ -1,0 +1,13 @@
+{
+  "attachmentFolderPath": ".raw/assets",
+  "userIgnoreFilters": [
+    ".cache",
+    ".raw",
+    ".superpowers",
+    "ops",
+    "README.md"
+  ],
+  "useMarkdownLinks": false,
+  "newLinkFormat": "shortest",
+  "showUnsupportedFiles": false
+}

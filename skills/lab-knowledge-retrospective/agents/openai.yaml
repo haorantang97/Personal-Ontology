@@ -1,0 +1,6 @@
+interface:
+  display_name: "Lab Knowledge Retrospective / 复盘蒸馏"
+  short_description: "Distil a finished task into reusable, evidence-bounded conclusions / 把已结束的工作蒸馏成带证据边界的可复用结论"
+  default_prompt: "Use $lab-knowledge-retrospective to review what just finished: fetch the current method pages first, separate narrative from conclusions, attach evidence and sample size, and list only what survives for my approval. / 使用 $lab-knowledge-retrospective 复盘刚结束的工作：先取当前方法页，把叙事和结论分开，为每条结论附上证据与样本量，只列出经得起检验的条目等我批准。"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,17 @@
+{
+  "name": "agent-knowledge-gateway",
+  "version": "1.6.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "digest": "node proposal-digest.mjs",
+    "test": "npm run test:router && npm run test:smoke",
+    "test:router": "node --test knowledge-router.test.mjs",
+    "test:smoke": "node smoke-test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "4.1.12"
+  }
+}

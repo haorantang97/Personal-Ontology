@@ -1,0 +1,53 @@
+name: Gateway tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lab-ontology/**"
+      - "tests/**"
+      - ".github/workflows/gateway-tests.yml"
+  pull_request:
+    paths:
+      - "lab-ontology/**"
+      - "tests/**"
+      - ".github/workflows/gateway-tests.yml"
+
+jobs:
+  lab-ontology:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repository layout tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: lab-ontology/vault/ops/gateway/package-lock.json
+      - name: Vault validator on the shipped skeleton
+        working-directory: lab-ontology/vault
+        run: node ops/validate-vault.mjs
+      - name: Install gateway dependencies
+        working-directory: lab-ontology/vault/ops/gateway
+        run: npm ci
+      - name: Router unit tests
+        working-directory: lab-ontology/vault/ops/gateway
+        run: npm run test:router
+      - name: Gateway boots and lists all 13 tools (no GBrain required)
+        working-directory: lab-ontology/vault/ops/gateway
+        run: |
+          node --input-type=module -e '
+            import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+            import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+            const transport = new StdioClientTransport({ command: process.execPath, args: ["server.mjs"] });
+            const client = new Client({ name: "ci-probe", version: "0" });
+            await client.connect(transport);
+            const { tools } = await client.listTools();
+            const names = tools.map((t) => t.name).sort();
+            console.log(names.join("\n"));
+            if (names.length !== 13 || !names.every((n) => n.startsWith("knowledge_"))) {
+              throw new Error(`unexpected tool set: ${names.length}`);
+            }
+            await client.close();
+          '

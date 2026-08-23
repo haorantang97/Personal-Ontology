@@ -8,7 +8,7 @@
 
 **本模块不能独立运行。** 它要求宿主已连接一个提供 `knowledge_intake`、`knowledge_search`、`knowledge_propose_changes`、`knowledge_apply_proposal` 等工具的 `agent-knowledge` MCP 服务器，以及该服务器背后的 Obsidian/Git Vault 与派生索引。
 
-该网关**不包含在本仓库中**。没有它时，本 Skill 的正确行为是声明网关不可用并停下，而不是退回到写一个无人管理的 Markdown 文件。
+该网关由本仓库的系统模块 [`lab-ontology`](../../lab-ontology/README.md) 提供，需要按其 README 单独安装并注册到宿主。没有它时，本 Skill 的正确行为是声明网关不可用并停下，而不是退回到写一个无人管理的 Markdown 文件。
 
 ## Installation
 

@@ -1,0 +1,11 @@
+.DS_Store
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+ops/gateway/node_modules/
+
+# Retired layouts and runtimes must not re-enter the GBrain source set.
+/.llm-wiki/
+/wiki/
+/raw/
+/purpose.md
+/schema.md
