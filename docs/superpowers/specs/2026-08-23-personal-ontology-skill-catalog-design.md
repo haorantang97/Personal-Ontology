@@ -1,5 +1,7 @@
 # Personal-Ontology Skill Catalog Design
 
+> Historical design record: this document preserves the public name used at the time of import. The current installable name is `lab-context-distillation-wx`; use the root catalog and module README for current paths.
+
 ## Goal
 
 Turn `Personal-Ontology` into the public catalog for the author's original personal-ontology Skills, with the existing WeChat/personal-context distillation product imported as the first self-contained module named `lab-context-distillation`.

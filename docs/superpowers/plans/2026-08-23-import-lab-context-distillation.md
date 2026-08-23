@@ -1,5 +1,7 @@
 # Import Lab Context Distillation Implementation Plan
 
+> Historical implementation record: the paths and public name below describe the original import. The current installable name is `lab-context-distillation-wx`; use the root catalog and module README for current commands.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the Personal-Ontology catalog and import the committed public distillation product as the self-contained `lab-context-distillation` Skill.

@@ -1,4 +1,4 @@
-# Lab Context Distillation Public-View / Personal Noncommercial License (Draft)
+# Lab Context Distillation WX Public-View / Personal Noncommercial License (Draft)
 
 Version 0.1 — lawyer review required before public release.
 

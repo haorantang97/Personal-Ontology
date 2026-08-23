@@ -8,7 +8,7 @@
 
 | Skill | 输入方式 | 核心工作 | 文档 |
 | --- | --- | --- | --- |
-| `lab-context-distillation` | 微信聊天、数据库和标准导出等既有记录 | 本地采集、解密适配、脱敏、证据化蒸馏与验收 | [打开 Skill 文档](skills/lab-context-distillation/README.md) |
+| `lab-context-distillation-wx` | 微信 4.x 聊天、数据库及其合法导出 | 本地采集、解密适配、脱敏、证据化蒸馏与验收 | [打开 Skill 文档](skills/lab-context-distillation-wx/README.md) |
 | `lab-life-reviewer` | 用户主动讲述与当前主题相关材料 | 逐事件采访、人生经历还原、Raw/handoff 交接与批准后归档 | [打开 Skill 文档](skills/lab-life-reviewer/README.md) |
 | `lab-knowledge-intake` | 任意待归档材料：链接、文件、文本或对话 | 取网关契约、查重、生成精确提案、等待用户批准后写入 | [打开 Skill 文档](skills/lab-knowledge-intake/README.md) |
 | `lab-knowledge-retrospective` | 一段已经结束的任务、事故、访谈或长对话 | 先取当前方法页，把叙事与结论分开，带证据与样本量蒸馏，批准后交给 intake | [打开 Skill 文档](skills/lab-knowledge-retrospective/README.md) |
@@ -28,7 +28,7 @@
 使用社区 Agent Skills 安装器安装指定模块：
 
 ```bash
-npx skills add haorantang97/Personal-Ontology --skill lab-context-distillation
+npx skills add haorantang97/Personal-Ontology --skill lab-context-distillation-wx
 npx skills add haorantang97/Personal-Ontology --skill lab-life-reviewer
 npx skills add haorantang97/Personal-Ontology --skill lab-knowledge-intake
 npx skills add haorantang97/Personal-Ontology --skill lab-knowledge-retrospective

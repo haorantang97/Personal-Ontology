@@ -1,0 +1,7 @@
+interface:
+  display_name: "Lab Context Distillation WX"
+  short_description: "将获准的微信 4.x 聊天安全蒸馏为可追溯、可验收的个人上下文"
+  default_prompt: "Use $lab-context-distillation-wx to run an evidence-bounded, privacy-preserving distillation workflow on my approved WeChat data."
+
+policy:
+  allow_implicit_invocation: true
