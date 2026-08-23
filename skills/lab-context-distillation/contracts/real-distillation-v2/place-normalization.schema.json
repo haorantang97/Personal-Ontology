@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pcd://contracts/real-distillation-v2/place-normalization.schema.json",
+  "title": "Deterministic Place Normalization Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["place_id", "raw", "canonical", "kind", "status", "candidate_ids"],
+  "properties": {
+    "place_id": {"type": "string", "minLength": 1},
+    "raw": {"type": "string", "minLength": 1},
+    "canonical": {"type": ["string", "null"]},
+    "kind": {"enum": ["country", "city", "subregion", "landmark", "other", "ambiguous"]},
+    "status": {"enum": ["applied", "ambiguous"]},
+    "mapping_type": {"enum": ["alias", "typo", "slang", "abbreviation", "contained_in"]},
+    "candidate_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "contained_in": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical", "kind"],
+      "properties": {
+        "canonical": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["country", "city", "subregion", "landmark", "other"]}
+      }
+    }
+  },
+  "deterministic_policy": {
+    "auto_apply_if": "exact_normalized_raw_match AND exactly_one_safe_candidate AND exactly_one_target",
+    "otherwise": "status=ambiguous, kind=ambiguous, canonical=null",
+    "visited_countries_accept_kinds": ["country"],
+    "visited_countries_accept_dispositions": ["occurred", "completed"],
+    "city_or_landmark_implies_country_visit": false
+  }
+}

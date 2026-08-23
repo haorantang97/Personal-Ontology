@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "version": "2.0.1",
+  "designation": "verified_route_result_trust_boundary_correction",
+  "predecessor_manifest": "versions/v2-verified-release.json",
+  "frozen_implementation_commit": "377c4836dc3063e3e86c7a3d90cfe73b8997a04f",
+  "frozen_implementation_tree": "36e0344bc5ec20b9096b181e0aaacdbd95521668",
+  "contract_milestone_commit": "aa621b07520337d439a5f3b5338475aa5385895b",
+  "contract_version": "2.0.1-contract-rc2",
+  "contract_bundle_sha256": "e2f27026522d8c5a78c20f4d8744bc997611d84f49a91e85c23c0ce376588500",
+  "contract_manifest_sha256": "acadbde8cf1a25075eef2fd402f0bf8f8c69aa407fd187d8e994859b2c98ab47",
+  "tracked_file_count": 119,
+  "verified_test_count": 150,
+  "verification_scope": "synthetic_and_public_fixtures_plus_authorized_legacy_aggregate_field_evidence",
+  "wechat_build_field_compatibility_claim": false,
+  "legacy_travel_aggregates_are_current_contract_field_validation": false,
+  "corrections": {
+    "exactly_one_processing_result_per_route": true,
+    "independent_events_per_route": "zero_to_many",
+    "per_event_disposition_authoritative": true,
+    "route_evidence_allowlist_enforced": true,
+    "route_place_allowlist_enforced": true,
+    "empty_place_allowlist_requires_empty_place_ids": true,
+    "ledger_merge_revalidates_route_bindings": true
+  },
+  "audit": {
+    "previous_incident_classes": 74,
+    "additional_contract_incident_classes": 3,
+    "total_incident_classes": 77,
+    "independent_behavioral_reviewer": false
+  },
+  "relative_to_v2": {
+    "changed_paths": 34,
+    "final_tracked_paths": 119,
+    "previous_tracked_paths": 117,
+    "changed_path_ratio": 0.285714,
+    "production_python_nonblank_noncomment_v2": 5054,
+    "production_python_nonblank_noncomment_v201": 5261,
+    "production_python_growth_ratio": 0.040958,
+    "production_diff_additions": 350,
+    "production_diff_deletions": 133
+  },
+  "publication": {
+    "github_published": false,
+    "global_install_performed": false,
+    "knowledge_base_write_performed": false,
+    "custom_license_lawyer_review_required": true
+  },
+  "notes": [
+    "The frozen implementation commit contains the corrected executable route-result and event-item path plus synthetic regression tests.",
+    "The legacy v2 manifest remains unchanged; this append-only manifest points to a later implementation commit.",
+    "The finalization commit adds only this manifest and updated verification/status records, avoiding a self-referential commit hash."
+  ]
+}

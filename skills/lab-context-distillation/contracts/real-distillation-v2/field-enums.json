@@ -1,0 +1,37 @@
+{
+  "schema_version": "pcd-field-enums/v3",
+  "domains": [
+    "travel",
+    "education",
+    "work",
+    "relationship",
+    "residence",
+    "family",
+    "health",
+    "finance",
+    "creation"
+  ],
+  "processing_dispositions": [
+    "events_emitted",
+    "no_signal",
+    "out_of_domain",
+    "insufficient_evidence"
+  ],
+  "event_dispositions": [
+    "occurred",
+    "completed",
+    "ongoing",
+    "booked_unconfirmed",
+    "visa",
+    "planned",
+    "discussed",
+    "third_party"
+  ],
+  "subjects": ["self", "third_party", "mixed", "unknown"],
+  "time_precisions": ["day", "month", "year", "relative", "unknown"],
+  "place_kinds": ["country", "city", "subregion", "landmark", "other", "ambiguous"],
+  "place_mapping_types": ["alias", "typo", "slang", "abbreviation", "contained_in"],
+  "coverage_statuses": ["complete", "partial", "not_extracted", "ambiguous"],
+  "failure_categories": ["infrastructure", "structure", "content", "privacy", "dependency"],
+  "runtime_modes": ["biography", "voice", "advisor", "mixed"]
+}

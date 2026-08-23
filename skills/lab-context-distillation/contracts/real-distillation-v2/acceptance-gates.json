@@ -1,0 +1,21 @@
+{
+  "schema_version": "pcd-real-distillation-acceptance-gates/v3",
+  "gates": [
+    {"gate_id": "frozen_denominator", "stage": "domain_plan", "pass_if": "route_ids_are_unique_and_packet_seal_valid", "failure_category": "dependency", "on_fail": "stop"},
+    {"gate_id": "one_processing_result_per_route", "stage": "domain_validate", "pass_if": "route_result_ids_exactly_partition_frozen_route_ids_and_each_has_one_processing_disposition", "failure_category": "content", "on_fail": "needs_human_or_targeted_retry"},
+    {"gate_id": "event_multiplicity_preserved", "stage": "domain_validate_and_merge", "pass_if": "every_events_array_is_preserved_in_order_without_merge_deletion_or_route_status_inheritance", "failure_category": "content", "on_fail": "block"},
+    {"gate_id": "event_disposition_authority", "stage": "domain_validate", "pass_if": "every_emitted_event_has_its_own_valid_disposition_and_third_party_subject_agrees", "failure_category": "content", "on_fail": "needs_human"},
+    {"gate_id": "dual_time", "stage": "domain_validate", "pass_if": "route_observed_time_equals_input_and_each_event_asserted_time_is_independent_or_null", "failure_category": "content", "on_fail": "needs_human"},
+    {"gate_id": "place_safe_mapping", "stage": "place_normalize", "pass_if": "unique_exact_safe_candidate_or_ambiguous", "failure_category": "content", "on_fail": "retain_ambiguous"},
+    {"gate_id": "evidence_binding", "stage": "all_semantic_stages", "pass_if": "every_event_evidence_id_is_in_its_own_frozen_route_allowlist_and_every_route_has_a_processing_disposition", "failure_category": "content", "on_fail": "needs_human"},
+    {"gate_id": "place_binding", "stage": "domain_validate_and_merge", "pass_if": "every_event_place_id_is_in_its_own_frozen_route_place_allowlist_and_empty_allowlist_means_empty_place_ids", "failure_category": "content", "on_fail": "block"},
+    {"gate_id": "privacy_redacted_only", "stage": "before_model", "pass_if": "no_raw_database_key_identity_map_private_path_or_unredacted_original", "failure_category": "privacy", "on_fail": "block"},
+    {"gate_id": "hash_seal", "stage": "every_immutable_boundary", "pass_if": "manifest_file_hashes_and_seal_verify", "failure_category": "dependency", "on_fail": "block"},
+    {"gate_id": "accepted_terminal", "stage": "resume", "pass_if": "accepted_unit_has_no_later_event_and_is_never_reclaimed", "failure_category": "dependency", "on_fail": "block"},
+    {"gate_id": "deterministic_repair_narrative_invariant", "stage": "local_validation", "pass_if": "repair_is_whitelisted_and_narrative_before_hash_equals_after_hash", "failure_category": "structure", "on_fail": "needs_human"},
+    {"gate_id": "failure_class_separation", "stage": "recovery", "pass_if": "explicit_structured_failure_event_uses_known_category", "failure_category": "structure", "on_fail": "block_classifier_guess"},
+    {"gate_id": "coverage_declaration", "stage": "runtime", "pass_if": "relevant_domains_declare_complete_partial_not_extracted_or_ambiguous", "failure_category": "content", "on_fail": "answer_unknown"},
+    {"gate_id": "no_arbitrary_retrieval_fallback", "stage": "runtime", "pass_if": "no_match_returns_unknown_and_coverage_gap", "failure_category": "content", "on_fail": "block_answer"},
+    {"gate_id": "kb_explicit_approval", "stage": "knowledge_proposal", "pass_if": "exact_proposal_seal_has_separate_user_approval", "failure_category": "privacy", "on_fail": "no_write"}
+  ]
+}

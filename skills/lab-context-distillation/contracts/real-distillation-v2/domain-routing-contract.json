@@ -1,0 +1,47 @@
+{
+  "schema_version": "pcd-domain-routing-contract/v3",
+  "input": {
+    "authority": "accepted_redacted_map_episode_release",
+    "required_fields": ["episode_id", "observed_message_time"],
+    "optional_candidate_fields": ["evidence_ids", "place_ids"],
+    "forbidden_classes": ["raw_database", "local_key", "identity_map", "unredacted_original", "private_local_path"],
+    "route_id_formula": "{domain}:{episode_id}",
+    "denominator": "exact_frozen_route_ids",
+    "route_evidence_allowlists": "nonempty_exact_frozen_redacted_evidence_ids_per_route",
+    "route_place_allowlists": "zero_or_more_exact_frozen_place_candidate_ids_per_route"
+  },
+  "output": {
+    "schema": "route-result.schema.json",
+    "event_item_schema": "life-event.schema.json",
+    "cardinality": "exactly_one_route_result_per_route_id",
+    "processing_disposition_required": true,
+    "processing_dispositions": ["events_emitted", "no_signal", "out_of_domain", "insufficient_evidence"],
+    "event_dispositions": ["occurred", "completed", "ongoing", "booked_unconfirmed", "visa", "planned", "discussed", "third_party"],
+    "event_cardinality": "zero_to_many_independent_events",
+    "events_emitted_requires": "one_or_more_events",
+    "other_processing_dispositions_require": "empty_events",
+    "event_disposition_is_authoritative": true,
+    "route_status_must_not_be_inherited_by_events": true,
+    "independent_events_must_not_be_merged_or_deleted": true,
+    "third_party_event_subject_must_agree": true,
+    "observed_message_time_must_equal_input": true,
+    "each_asserted_event_time_is_independent_or_null": true,
+    "message_time_may_fill_event_time": false,
+    "route_evidence_allowlist_required": true,
+    "event_evidence_must_be_subset_of_own_route_allowlist": true,
+    "route_place_allowlist_required": true,
+    "event_place_ids_must_be_subset_of_own_route_allowlist": true,
+    "empty_route_place_allowlist_requires_empty_event_place_ids": true
+  },
+  "coverage": {
+    "complete": "processed_equals_frozen_denominator_and_no_insufficient_evidence",
+    "partial": "one_or_more_frozen_routes_missing",
+    "not_extracted": "domain_has_no_extraction_authority",
+    "ambiguous": "processed_equals_frozen_denominator_and_one_or_more_insufficient_evidence"
+  },
+  "domain_execution_order": {
+    "field_evidenced_first": ["travel"],
+    "remaining_independent": ["education", "work", "relationship", "residence", "family", "health", "finance", "creation"],
+    "merge_only_after_each_domain_has_explicit_coverage": true
+  }
+}

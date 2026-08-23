@@ -1,0 +1,92 @@
+{
+  "self_model": [
+    {
+      "asset_id": "asset-observation-1",
+      "layer": "observation",
+      "statement": "Synthetic travel preparation is explicit",
+      "domain_scope": ["travel"],
+      "evidence_ids": ["evidence-2"],
+      "confidence": "high",
+      "counterexamples": [],
+      "time_evolution": [],
+      "unresolved_tensions": [],
+      "calibration": {"behavior_change": false, "status": "safe_layer"},
+      "source_ids": ["synthetic-source"],
+      "active": true
+    }
+  ],
+  "voice": {
+    "scenarios": [
+      {
+        "scenario_id": "synthetic-short-draft",
+        "relationship_distance": "neutral",
+        "emotional_temperature": "calm",
+        "purpose": "inform",
+        "length": "short",
+        "humor_conditions": "only when invited",
+        "profanity_boundary": "do not introduce profanity",
+        "correction_style": "state the correction and its evidence",
+        "burst_rhythm": "one concise message",
+        "redacted_features": ["direct", "concise"],
+        "private_vault_refs": [],
+        "evidence_ids": ["evidence-2"]
+      }
+    ],
+    "blind_review": {"required": true, "status": "not_run", "reviewer_count": 0}
+  },
+  "permissions": {
+    "biography": "describe_with_coverage",
+    "voice": "draft_only",
+    "advisor": "recommend_with_tradeoffs",
+    "auto_send": false,
+    "impersonate": false,
+    "irreversible_commitment": false,
+    "claim_indistinguishable": false
+  },
+  "fidelity": {
+    "independent_from_content_qa": true,
+    "evaluations": {
+      "cross_domain_reproduction": {"status": "not_run", "cases": 0},
+      "holdout_prediction": {"status": "not_run", "cases": 0},
+      "non_generic_distinctiveness": {"status": "not_run", "cases": 0}
+    },
+    "field_claim": false
+  },
+  "evaluation_cases": [
+    {
+      "case_id": "eval-development-synthetic",
+      "evaluation": "cross_domain_reproduction",
+      "split": "development",
+      "status": "passed",
+      "evidence_ids": ["evidence-1"],
+      "input_ref": "redacted-case-development-1",
+      "expected_behavior": "Keep the event domain and evidence boundary",
+      "observed_behavior": "Passed on a synthetic fixture"
+    },
+    {
+      "case_id": "eval-holdout-synthetic",
+      "evaluation": "holdout_prediction",
+      "split": "holdout",
+      "status": "not_run",
+      "evidence_ids": ["evidence-2"],
+      "input_ref": "redacted-case-holdout-1",
+      "expected_behavior": "Predict a bounded behavior without generic claims",
+      "observed_behavior": null
+    },
+    {
+      "case_id": "eval-blind-synthetic",
+      "evaluation": "voice_blind_review",
+      "split": "blind",
+      "status": "not_run",
+      "evidence_ids": ["evidence-1"],
+      "input_ref": "local-blind-case-ref-1",
+      "expected_behavior": "A real reviewer compares the draft without identity cues",
+      "observed_behavior": null
+    }
+  ],
+  "goals": {"items": []},
+  "open_loops": {"items": []},
+  "relationships": {"items": []},
+  "time_evolution": {"items": []},
+  "boundaries": ["Evidence-bounded synthetic package"]
+}

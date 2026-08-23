@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pcd://contracts/real-distillation-v2/route-result.schema.json",
+  "title": "Personal Context Distillation Route Result v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "route_id",
+    "episode_id",
+    "domain",
+    "observed_message_time",
+    "processing_disposition",
+    "events"
+  ],
+  "properties": {
+    "route_id": {"type": "string", "minLength": 1},
+    "episode_id": {"type": "string", "minLength": 1},
+    "domain": {"enum": ["travel", "education", "work", "relationship", "residence", "family", "health", "finance", "creation"]},
+    "observed_message_time": {"$ref": "#/$defs/time_value"},
+    "processing_disposition": {"enum": ["events_emitted", "no_signal", "out_of_domain", "insufficient_evidence"]},
+    "events": {
+      "type": "array",
+      "items": {"$ref": "life-event.schema.json"}
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"processing_disposition": {"const": "events_emitted"}}},
+      "then": {"properties": {"events": {"minItems": 1}}},
+      "else": {"properties": {"events": {"maxItems": 0}}}
+    }
+  ],
+  "$defs": {
+    "time_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "precision"],
+      "properties": {
+        "value": {"type": ["string", "null"]},
+        "precision": {"enum": ["day", "month", "year", "relative", "unknown"]}
+      }
+    }
+  }
+}

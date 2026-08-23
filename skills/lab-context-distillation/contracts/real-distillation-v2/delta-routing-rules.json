@@ -1,0 +1,54 @@
+{
+  "schema_version": "pcd-delta-routing-rules/v2",
+  "start_stage": "post_map_domain_routing",
+  "accepted_map_policy": "reuse_never_rerun",
+  "preconditions": [
+    "accepted_map_authority_is_read_only",
+    "redacted_episode_release_hash_verified",
+    "episode_denominator_frozen",
+    "no_private_identity_or_raw_source_enters_model_packet"
+  ],
+  "existing_travel": {
+    "adoption_policy": "adopt_after_hash_denominator_gate_and_lossless_route_event_migration_verification",
+    "route_result_migration_required": true,
+    "migration_invariant": "preserve_every_independent_event_and_assign_each_event_its_own_semantic_disposition",
+    "required_aggregate_checks": {
+      "terminal_dispositions": {"numerator": 1696, "denominator": 1696, "ready": true, "error_codes": []},
+      "place_normalization": {"processed": 311, "denominator": 311, "classified": 269, "ambiguous": 42, "candidate_mappings": 226}
+    },
+    "rerun_map": false,
+    "rerun_travel_if_checks_pass": false
+  },
+  "remaining_domains": ["education", "work", "relationship", "residence", "family", "health", "finance", "creation"],
+  "per_domain_steps": [
+    "freeze_exact_route_denominator",
+      "run_high_recall_route_processing_and_independent_event_extraction",
+      "validate_event_dispositions_dual_time_subject_evidence_places_and_coverage",
+    "seal_domain_ledger",
+    "isolate_failures_without_blocking_other_domains"
+  ],
+  "merge_precondition": "every_requested_domain_has_explicit_coverage_status",
+  "post_merge_steps": [
+    "merge_complete_domain_ledgers",
+    "rebuild_biography_display_without_deleting_events",
+    "refresh_layered_self_model_voice_advisor_and_open_loops",
+    "run_content_qa_and_independent_fidelity_status",
+    "seal_portable_runtime_package"
+  ],
+  "change_routing": {
+    "new_source": "map_only_new_generation_then_reextract_affected_domains",
+    "user_correction": "create_new_profile_version_and_revalidate_affected_items",
+    "source_withdrawal": "deactivate_dependencies_then_rebuild_affected_domains_and_downstream_assets",
+    "domain_rule_change": "reextract_only_that_domain_from_accepted_map_authority",
+    "rollback": "create_new_snapshot_from_target_version_without_map",
+    "model_or_vendor_change": "keep_local_release_contracts_and_gates_unchanged"
+  },
+  "forbidden_actions": [
+    "rerun_accepted_map",
+    "mutate_old_release_or_receipt",
+    "use_message_time_as_event_time",
+    "guess_ambiguous_place",
+    "drop_low_importance_event",
+    "write_knowledge_base_without_exact_approval"
+  ]
+}

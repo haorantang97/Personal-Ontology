@@ -1,0 +1,18 @@
+{
+  "schema_version": "pcd-contract-manifest/v1",
+  "contract_version": "2.0.1-contract-rc2",
+  "status": "immutable_parallel-use-correction",
+  "files": {
+    "acceptance-gates.json": "bb531631cb735605830bc9de5654cc609d291b552f781ebbfdb0c760913f3d3e",
+    "delta-routing-rules.json": "2932461800dbb720df2edc6959e0e2a9e804d3b67271edafb213c02e837a1b0e",
+    "domain-routing-contract.json": "a14f8c43ecfb58ba4aa339845d4cac1aad9160f73198e6e35fe810a8df843c13",
+    "field-enums.json": "0513517755cbdcd30459d31bed7744436c6bbfee16bd2dd0b899983cf30d9e97",
+    "life-event.schema.json": "6fd8d2386191f24d9c9a56204f8b0448b6b33c06b308c1d032a1125617e4b6c9",
+    "place-normalization.schema.json": "b9a0b3a1f1ce1c9abffc70658b2e832d8c843bc5146b1524d7043bc6dedb6b9f",
+    "route-result.schema.json": "a632acc44da08b190ee7392bd3219527e166766e16d7721b14b753c69440ebde"
+  },
+  "bundle_hash": "e2f27026522d8c5a78c20f4d8744bc997611d84f49a91e85c23c0ce376588500",
+  "field_compatibility_claim": false,
+  "private_data_included": false,
+  "source_workspace_dependency": false
+}

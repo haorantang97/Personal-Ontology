@@ -1,0 +1,30 @@
+{
+  "schema_version": "pcd-aggregate-field-evidence/v1",
+  "private_content_included": false,
+  "travel_event_ledger": {
+    "version_label": "v105",
+    "eligible_episodes": 1696,
+    "terminal_dispositions": 1696,
+    "ready": true,
+    "error_codes": []
+  },
+  "place_normalization": {
+    "version_label": "v106",
+    "mentions": 311,
+    "processed": 311,
+    "classified": 269,
+    "ambiguous": 42,
+    "candidate_mappings": 226,
+    "category_counts": {
+      "country": 47,
+      "city": 99,
+      "subregion": 61,
+      "landmark": 42,
+      "other": 20
+    },
+    "regression_tests": {"passed": 14, "total": 14},
+    "authoritative_files_modified": false,
+    "knowledge_base_write": false,
+    "cloud_write": false
+  }
+}

@@ -1,0 +1,86 @@
+[
+  {
+    "route_id": "route-travel-1",
+    "episode_id": "episode-1",
+    "domain": "travel",
+    "observed_message_time": {"value": "2026-04-03", "precision": "day"},
+    "processing_disposition": "events_emitted",
+    "events": [
+      {
+        "subject": "self",
+        "disposition": "completed",
+        "title": "Completed synthetic trip",
+        "summary": "去年去了日本并完成行程",
+        "importance": 0.4,
+        "asserted_event_time": {"value": "2025", "precision": "year"},
+        "evidence_ids": ["evidence-1"],
+        "place_ids": ["place-country-jp", "place-city-tokyo"]
+      }
+    ]
+  },
+  {
+    "route_id": "route-travel-2",
+    "episode_id": "episode-2",
+    "domain": "travel",
+    "observed_message_time": {"value": "2026-05-01T09:30:00Z", "precision": "day"},
+    "processing_disposition": "events_emitted",
+    "events": [
+      {
+        "subject": "self",
+        "disposition": "visa",
+        "title": "Synthetic visa preparation",
+        "summary": "正在准备日本签证材料",
+        "importance": 0.8,
+        "asserted_event_time": {"value": "下个月", "precision": "relative"},
+        "evidence_ids": ["evidence-2"],
+        "place_ids": ["place-country-jp"]
+      }
+    ]
+  },
+  {
+    "route_id": "route-work-1",
+    "episode_id": "episode-3",
+    "domain": "work",
+    "observed_message_time": {"value": "2026-05", "precision": "month"},
+    "processing_disposition": "events_emitted",
+    "events": [
+      {
+        "subject": "self",
+        "disposition": "planned",
+        "title": "Synthetic work plan",
+        "summary": "计划换一种工作节奏",
+        "importance": 0.7,
+        "asserted_event_time": null,
+        "evidence_ids": ["evidence-3"],
+        "place_ids": []
+      }
+    ]
+  },
+  {
+    "route_id": "route-relationship-1",
+    "episode_id": "episode-4",
+    "domain": "relationship",
+    "observed_message_time": {"value": "2026-06-01", "precision": "day"},
+    "processing_disposition": "events_emitted",
+    "events": [
+      {
+        "subject": "third_party",
+        "disposition": "third_party",
+        "title": "Synthetic third-party event",
+        "summary": "朋友讨论了自己的关系变化",
+        "importance": 0.2,
+        "asserted_event_time": {"value": null, "precision": "unknown"},
+        "evidence_ids": ["evidence-4"],
+        "place_ids": []
+      }
+    ]
+  },
+  {
+    "route_id": "route-health-1",
+    "episode_id": "episode-5",
+    "domain": "health",
+    "observed_message_time": {"value": "2026-06-02", "precision": "day"},
+    "processing_disposition": "no_signal",
+    "events": []
+  }
+]

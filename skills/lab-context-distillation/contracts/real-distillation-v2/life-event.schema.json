@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pcd://contracts/real-distillation-v2/life-event.schema.json",
+  "title": "Personal Context Distillation Independent Event Item v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subject",
+    "disposition",
+    "title",
+    "summary",
+    "importance",
+    "asserted_event_time",
+    "evidence_ids",
+    "place_ids"
+  ],
+  "properties": {
+    "subject": {"enum": ["self", "third_party", "mixed", "unknown"]},
+    "disposition": {"enum": ["occurred", "completed", "ongoing", "booked_unconfirmed", "visa", "planned", "discussed", "third_party"]},
+    "title": {"type": "string", "minLength": 1},
+    "summary": {"type": "string", "minLength": 1},
+    "importance": {"type": "number", "minimum": 0, "maximum": 1},
+    "asserted_event_time": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/time_value"}]},
+    "evidence_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "place_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"disposition": {"const": "third_party"}}},
+      "then": {"properties": {"subject": {"const": "third_party"}}}
+    },
+    {
+      "if": {"properties": {"subject": {"const": "third_party"}}},
+      "then": {"properties": {"disposition": {"const": "third_party"}}}
+    }
+  ],
+  "$defs": {
+    "time_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "precision"],
+      "properties": {
+        "value": {"type": ["string", "null"]},
+        "precision": {"enum": ["day", "month", "year", "relative", "unknown"]}
+      }
+    }
+  }
+}

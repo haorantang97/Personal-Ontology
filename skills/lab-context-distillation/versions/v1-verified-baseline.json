@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "version": "1.0.0-baseline",
+  "designation": "previous_verified_baseline",
+  "frozen_commit": "e4c0f99fbfcbb55dd92f7b5e0b4bb09cda864eea",
+  "frozen_tree": "dcb4fc5b7017337b311562a9dd5543aa7a06d5b6",
+  "tracked_file_count": 77,
+  "verified_test_count": 87,
+  "verification_scope": "synthetic_and_public_fixtures_only",
+  "field_compatibility_claim": false,
+  "superseded_as_current_generation": true,
+  "notes": [
+    "This manifest preserves the exact previous implementation tree by Git object identity.",
+    "It does not claim compatibility with a real WeChat installation or private database.",
+    "Later versions must use a new manifest and must not alter this file."
+  ]
+}

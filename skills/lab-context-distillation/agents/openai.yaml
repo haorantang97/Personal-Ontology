@@ -1,0 +1,7 @@
+interface:
+  display_name: "Lab Context Distillation"
+  short_description: "将已脱敏聊天安全蒸馏为可追溯、可验收的个人运作模型全路径"
+  default_prompt: "Use $lab-context-distillation to run an evidence-bounded, privacy-preserving distillation workflow on my approved conversation data."
+
+policy:
+  allow_implicit_invocation: true

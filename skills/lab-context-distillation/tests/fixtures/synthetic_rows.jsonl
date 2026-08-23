@@ -1,0 +1,3 @@
+{"source":"synthetic-a","shard":"0","row_id":1,"sender_id":"self-a","self_id":"self-a","timestamp":"2026-01-01T00:00:00Z","conversation_id":"c-local","text":"I compare two options before deciding."}
+{"source":"synthetic-a","shard":"0","row_id":2,"sender_id":"contact-a","self_id":"self-a","timestamp":"2026-01-01T00:01:00Z","conversation_id":"c-local","text":"A reply to consider","quoted_text":"Original synthetic prompt","quoted_author":"contact-a"}
+{"source":"synthetic-a","shard":"0","row_id":3,"sender_id":"self-a","self_id":"self-a","timestamp":"2026-01-01T00:02:00Z","conversation_id":"c-local","text":"Contact me at demo@example.test"}
