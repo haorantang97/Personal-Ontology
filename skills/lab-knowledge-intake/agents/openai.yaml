@@ -1,0 +1,6 @@
+interface:
+  display_name: "Lab Knowledge Intake / 知识库录入"
+  short_description: "Proposal-gated knowledge base writes / 提案式知识库写入"
+  default_prompt: "Use $lab-knowledge-intake to file this into my knowledge base through the gateway's proposal flow. / 使用 $lab-knowledge-intake 把这份材料按提案流程录入我的知识库。"
+policy:
+  allow_implicit_invocation: true

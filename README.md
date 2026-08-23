@@ -10,8 +10,9 @@
 | --- | --- | --- | --- |
 | `lab-context-distillation` | 微信聊天、数据库和标准导出等既有记录 | 本地采集、解密适配、脱敏、证据化蒸馏与验收 | [打开 Skill 文档](skills/lab-context-distillation/README.md) |
 | `lab-life-reviewer` | 用户主动讲述与当前主题相关材料 | 逐事件采访、人生经历还原、Raw/handoff 交接与批准后归档 | [打开 Skill 文档](skills/lab-life-reviewer/README.md) |
+| `lab-knowledge-intake` | 任意待归档材料：链接、文件、文本或对话 | 取网关契约、查重、生成精确提案、等待用户批准后写入 | [打开 Skill 文档](skills/lab-knowledge-intake/README.md) |
 
-两者汇入同一套个人上下文，但不互相替代：前者从已经留下的记录中提取，后者通过主动访谈把经历讲清楚。
+前两者汇入同一套个人上下文，但不互相替代：一个从已经留下的记录中提取，一个通过主动访谈把经历讲清楚。`lab-knowledge-intake` 是它们的下游——决定成果如何经提案与批准进入知识库，本身不产生内容。
 
 ## Quick install
 
@@ -20,6 +21,7 @@
 ```bash
 npx skills add haorantang97/Personal-Ontology --skill lab-context-distillation
 npx skills add haorantang97/Personal-Ontology --skill lab-life-reviewer
+npx skills add haorantang97/Personal-Ontology --skill lab-knowledge-intake
 ```
 
 也可以只复制对应的完整 Skill 目录。Codex、Claude Code、直接使用和卸载说明都在各模块 README 中。
