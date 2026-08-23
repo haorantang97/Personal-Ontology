@@ -4,3 +4,4 @@ __pycache__/
 .coverage
 .worktrees/
 work/
+node_modules/

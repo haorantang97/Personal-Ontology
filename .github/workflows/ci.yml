@@ -1,25 +1,39 @@
-name: Gateway tests
+name: CI
 
 on:
   push:
     branches: [main]
-    paths:
-      - "lab-ontology/**"
-      - "tests/**"
-      - ".github/workflows/gateway-tests.yml"
   pull_request:
-    paths:
-      - "lab-ontology/**"
-      - "tests/**"
-      - ".github/workflows/gateway-tests.yml"
 
 jobs:
+  repository-layout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Layout, naming and public-boundary tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+
+  lab-context-distillation-wx:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: skills/lab-context-distillation-wx
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests
+        run: PYTHONPATH=scripts python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: Bytecode compilation
+        run: python3 -m compileall -q scripts
+      - name: Frozen contract bundle
+        run: python3 scripts/pcd.py contract-validate contracts/real-distillation-v2
+
   lab-ontology:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Repository layout tests
-        run: python3 -m unittest discover -s tests -p 'test_*.py'
       - uses: actions/setup-node@v4
         with:
           node-version: 22

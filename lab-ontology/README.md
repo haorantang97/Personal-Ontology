@@ -100,7 +100,7 @@ Vault 必须是独立的 Git 仓库——网关以 `ops/gateway/../..` 为仓库
   "mcpServers": {
     "agent-knowledge": {
       "command": "node",
-      "args": ["/absolute/path/to/knowledge-base/ops/gateway/server.mjs"],
+      "args": ["/absolute/path/to/your-vault/ops/gateway/server.mjs"],
       "env": { "GBRAIN_BIN": "/absolute/path/to/gbrain" }
     }
   }
@@ -114,7 +114,7 @@ Vault 必须是独立的 Git 仓库——网关以 `ops/gateway/../..` 为仓库
 ### Claude Code
 
 ```bash
-claude mcp add agent-knowledge -e GBRAIN_BIN=/absolute/path/to/gbrain -- node /absolute/path/to/knowledge-base/ops/gateway/server.mjs
+claude mcp add agent-knowledge -e GBRAIN_BIN=/absolute/path/to/gbrain -- node /absolute/path/to/your-vault/ops/gateway/server.mjs
 ```
 
 Claude Desktop 则编辑 `claude_desktop_config.json`。网关对所有宿主暴露同一份工具与契约，没有分叉实现。
@@ -137,7 +137,7 @@ cd vault/ops/gateway && npm ci && npm run test:router     # 30 个路由单测�
 cd ../.. && node ops/validate-vault.mjs                    # 对骨架校验通过
 ```
 
-网关启动探针（不需要 GBrain）：连接 `server.mjs`，`listTools` 应返回恰好 13 个 `knowledge_*` 工具。仓库的 CI 工作流 [`gateway-tests.yml`](../.github/workflows/gateway-tests.yml) 就是跑这三步。
+网关启动探针（不需要 GBrain）：连接 `server.mjs`，`listTools` 应返回恰好 13 个 `knowledge_*` 工具。仓库的 CI 工作流 [`ci.yml`](../.github/workflows/ci.yml) 就是跑这三步。
 
 端到端检查 `npm run test:smoke` 需要 GBrain + Ollama 和一个有内容的 Vault；`smoke-test.mjs` 里的 `cases` 引用原始 Vault 的页面 slug，请换成你自己的页面。
 

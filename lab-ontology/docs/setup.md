@@ -68,7 +68,7 @@ Any MCP client can register the gateway as a stdio server (use absolute paths â€
   "mcpServers": {
     "agent-knowledge": {
       "command": "node",
-      "args": ["/absolute/path/to/knowledge-base/ops/gateway/server.mjs"],
+      "args": ["/absolute/path/to/your-vault/ops/gateway/server.mjs"],
       "env": {
         "GBRAIN_BIN": "/absolute/path/to/.bun/bin/gbrain",
         "GBRAIN_SOURCE_ID": "knowledge"
@@ -79,7 +79,7 @@ Any MCP client can register the gateway as a stdio server (use absolute paths â€
 ```
 
 - Claude Desktop: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Claude Code: `claude mcp add agent-knowledge -e GBRAIN_BIN=... -- node /absolute/path/to/knowledge-base/ops/gateway/server.mjs`
+- Claude Code: `claude mcp add agent-knowledge -e GBRAIN_BIN=... -- node /absolute/path/to/your-vault/ops/gateway/server.mjs`
 - Codex / Hermes: their respective MCP server configuration, same `command` / `args` / `env`.
 
 Then install `lab-knowledge-intake` and `lab-knowledge-retrospective` from `skills/` (see their READMEs). The skills only *trigger* `knowledge_intake`; the MCP response is the contract.
