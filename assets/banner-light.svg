@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="230" viewBox="0 0 1100 230" role="img" aria-label="Personal-Ontology">
+  <!-- three-layer vault motif -->
+  <g transform="translate(70,52)">
+    <rect x="0" y="84" width="118" height="34" rx="8" fill="#e5e7eb"/>
+    <rect x="14" y="46" width="118" height="34" rx="8" fill="#d8d2f0"/>
+    <rect x="28" y="8" width="118" height="34" rx="8" fill="#7c3aed"/>
+    <circle cx="196" cy="25" r="7" fill="#7c3aed"/>
+    <circle cx="216" cy="63" r="7" fill="#b45309"/>
+    <circle cx="196" cy="101" r="7" fill="#7c3aed"/>
+    <path d="M146 25 H189 M146 63 H209 M146 101 H189" stroke="#a8a3bd" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M203 31 L211 56 M211 70 L203 95" stroke="#a8a3bd" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g font-family="-apple-system,'Segoe UI',Helvetica,Arial,'PingFang SC','Microsoft YaHei',sans-serif">
+    <text x="360" y="102" font-size="52" font-weight="700" fill="#1f2330">Personal-Ontology <tspan fill="#7c3aed">/ 个人本体</tspan></text>
+    <text x="362" y="150" font-size="22" fill="#3f4454">让 AI Agent 长期、可追溯、经你批准地维护「关于你」的知识</text>
+    <text x="362" y="184" font-size="17" fill="#8a8fa3">Markdown + Git 是事实源 · 写入即提案 · 证据有成熟度</text>
+  </g>
+</svg>

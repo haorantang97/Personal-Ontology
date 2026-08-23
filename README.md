@@ -1,9 +1,21 @@
-# Personal-Ontology / 个人本体
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.svg">
+  <img src="assets/banner-light.svg" alt="Personal-Ontology / 个人本体" width="860">
+</picture>
+
+**中文** · [English](README.en.md)
 
 [![CI](https://github.com/haorantang97/Personal-Ontology/actions/workflows/ci.yml/badge.svg)](https://github.com/haorantang97/Personal-Ontology/actions/workflows/ci.yml)
-![Source of truth: Markdown + Git](https://img.shields.io/badge/source%20of%20truth-Markdown%20%2B%20Git-7c3aed?logo=obsidian&logoColor=white)
-![Writes: proposal-gated](https://img.shields.io/badge/writes-proposal--gated-b45309)
+[![Release](https://img.shields.io/github/v/tag/haorantang97/Personal-Ontology?label=release&color=7c3aed)](https://github.com/haorantang97/Personal-Ontology/tags)
+[![License: PolyForm NC 1.0.0](https://img.shields.io/badge/license-PolyForm%20NC%201.0.0-b45309)](LICENSE.md)
 ![MCP](https://img.shields.io/badge/protocol-MCP-6b4fbb)
+![Source of truth: Markdown + Git](https://img.shields.io/badge/source%20of%20truth-Markdown%20%2B%20Git-556)
+
+[全景](#全景) · [区别](#和常见自动记忆的区别) · [核心系统](#核心系统lab-ontology) · [Skills](#skills按知识流向排序) · [安装](#quick-install) · [状态](#各模块状态) · [FAQ](#faq) · [变更](CHANGELOG.md)
+
+</div>
 
 **让 AI Agent 长期、可追溯、经你批准地维护"关于你"的知识。**
 
@@ -42,6 +54,20 @@ flowchart LR
 ```
 
 从左到右就是知识的流向：先从既有记录或主动访谈里**采集**材料，再由复盘环节**决定什么值得留下**，最后经提案流程**入库**。所有 Agent 读知识都走同一个网关，读到的是同一份 Vault。
+
+## 和常见「自动记忆」的区别
+
+多数给 Agent 加记忆的方案是一个自动写入的黑盒：模型觉得重要就存，存进一个你打不开的向量库。这个仓库走的是另一条路：
+
+| | 常见自动记忆层 | Personal-Ontology |
+| --- | --- | --- |
+| 写入 | 模型自动判断、随时写 | 每次写入都是一份精确提案，你批准才落盘 |
+| 存储 | 私有数据库 / 向量库 | Obsidian 里的 Markdown + Git 历史，你随时可读可改 |
+| 出处 | 无 | 每条结论带来源家族、样本量与 `seed → corroborated → validated` 成熟度 |
+| 检索 | 向量相似即注入 | 精确优先路由：相似度只排序候选，永不单独触发读取 |
+| 迁移 | 与服务绑定 | 索引和图谱是派生层，可随时从 Markdown 重建 |
+
+代价也说清楚：它比"装上就有记忆"的方案重——需要本地跑网关和索引引擎，每次写入要你点头。适合把个人知识当长期资产管理的人，不适合只想要聊天记忆的场景。
 
 ## 核心系统：`lab-ontology`
 
@@ -134,6 +160,18 @@ Personal-Ontology/
 - 中文为主：README 用中文撰写并在末尾附英文摘要；代码、提交信息与 CI 用英文。
 - 不直接向 `main` 推送：每项工作开分支、走 PR、CI 全绿后合并，同一时间一个会话只动一个模块。详见 [CONTRIBUTING.md](CONTRIBUTING.md)，变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
+## FAQ
+
+**没有 GBrain 和 Ollama 能用吗？** 网关能启动、能返回契约、能建提案，但检索、路由和批准落盘需要它们。它们都是本地免费软件，装法见 [setup](lab-ontology/docs/setup.md)。
+
+**我的数据会离开我的电脑吗？** 不会。Vault、索引、审批记录全在本机；本仓库只发布系统，不含任何个人内容，CI 还会扫描私人路径泄漏。
+
+**和 mem0 / Basic Memory 这类项目什么关系？** 同一问题空间（给 Agent 的持久记忆），不同立场：它们优先"无感自动记忆"，这里优先"可审计的知识资产"——写入有审批门，证据有成熟度。两者可以共存。
+
+**为什么 Skill 这么薄？** Schema、路由和审批规则由网关的 `knowledge_intake` 返回，Skill 只负责把 Agent 引到网关上。这样 Claude、Codex、Hermes 写出的格式完全一致，Schema 演进也不用重新发布 Skill。
+
+**可以商用吗？** 个人与非商业用途自由使用；商业用途需要书面授权，见 [License](#license)。
+
 ## License
 
 本仓库采用 [PolyForm Noncommercial License 1.0.0](LICENSE.md)：个人与非商业用途（个人学习、研究、实验、爱好项目，以及慈善、教育、公共研究、公共安全与健康、环保、政府机构的使用）可自由查看、使用、修改和分发；任何商业用途需另行取得著作权人的书面授权。各模块不再单独维护许可文本，其 `LICENSE.md` 只指向根目录。第三方组件见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
@@ -141,6 +179,8 @@ Personal-Ontology/
 ---
 
 ## English summary
+
+> Full English documentation: [README.en.md](README.en.md)
 
 Personal-Ontology is an original workbench for letting AI agents maintain knowledge *about you* over the long run — traceably, and only with your approval. It consists of one system and four skills.
 
