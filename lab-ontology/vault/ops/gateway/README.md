@@ -114,3 +114,6 @@ cd ops/gateway && npm test
 ```
 
 The first check fails closed if the installed GBrain full-import walker could index governance or raw Markdown. Review the installed version before using `--apply`.
+
+`npm run test:smoke` reads its search cases from `ops/gateway/smoke-cases.json`
+(`[query, expectedSlug]` pairs) or from the file named by `SMOKE_CASES`.

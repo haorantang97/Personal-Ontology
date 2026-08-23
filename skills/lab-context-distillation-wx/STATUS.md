@@ -38,4 +38,4 @@ extraction, injection, re-signing, and proprietary native key derivation remain
 excluded pending qualified legal review and platform authorization. The safe
 fallback is a user-provided lawful decrypted export.
 
-Implementation status is tracked in `docs/feature-implementation-matrix.md`. A capability may be called implemented only when executable code exists. “Tested” and “field validated” are separate columns and must never be inferred from implementation alone. The custom public-view/personal-noncommercial license remains a draft requiring qualified legal review before external publication.
+Implementation status is tracked in `docs/feature-implementation-matrix.md`. A capability may be called implemented only when executable code exists. “Tested” and “field validated” are separate columns and must never be inferred from implementation alone. The module is licensed under the PolyForm Noncommercial License 1.0.0 together with the rest of the repository; the WeChat connector legal boundary still requires qualified legal review.

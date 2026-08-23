@@ -1,5 +1,7 @@
 # Lab Context Distillation WX
 
+> **中文摘要** — `lab-context-distillation-wx` 是一条确定性的本地 Python 流水线，把你授权的微信 4.x 聊天数据变成有证据边界的个人上下文。采集、解密适配和身份脱敏全部在本机完成，模型只看到密封过的脱敏数据包；每条路由恰好产生一个处理结果，事件各自带语义状态，完整事件账本是权威。当前为 v2.0.1，在合成/公开 fixture 上通过 150 个测试；**不**宣称与任何具体微信构建的真机兼容。安装、验证、隐私边界、升级与卸载说明见下文（英文）。运行前必读 [STATUS.md](STATUS.md)、[privacy-and-authorization.md](references/privacy-and-authorization.md) 与 [platform-connectors.md](references/platform-connectors.md)。
+
 `lab-context-distillation-wx` is a provider-neutral Agent Skill and deterministic local pipeline primarily for turning user-approved WeChat 4.x data into evidence-bounded personal context. Lawful standard conversation exports remain available as a fallback ingestion boundary; they do not make this a general-purpose multi-platform importer.
 
 It is not prompt-only. The directory contains the Skill entrypoint, Python controller, platform connectors, immutable contracts, synthetic fixtures, tests, privacy rules, validation gates, and portable runtime packaging.
@@ -136,7 +138,7 @@ Remove only the installed `lab-context-distillation-wx` directory from the Agent
 
 ## License
 
-The module is publicly viewable and available for personal noncommercial use under the draft [LICENSE.md](LICENSE.md). Commercial use, enterprise deployment, customer delivery, redistribution, and repackaging require written authorization. Lawyer review is required before public release.
+The module is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE.md) (full text in the repository root). Personal and noncommercial use, modification and distribution are permitted; any commercial use requires a separate written license from the copyright holder.
 
 ## Provenance
 

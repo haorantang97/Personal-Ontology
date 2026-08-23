@@ -1,9 +1,7 @@
 {
   "attachmentFolderPath": ".raw/assets",
   "userIgnoreFilters": [
-    ".cache",
     ".raw",
-    ".superpowers",
     "ops",
     "README.md"
   ],

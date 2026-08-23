@@ -84,7 +84,7 @@ python3 /path/to/skill-creator/scripts/quick_validate.py .
 
 ## License
 
-本模块采用“公开可查看、个人非商业使用”的[许可草案](LICENSE.md)。商业使用、企业部署、客户交付、再包装或再分发需要权利人的书面授权；正式公开发布前仍需律师复核。
+本模块采用 [PolyForm Noncommercial License 1.0.0](LICENSE.md)（全文见仓库根目录）：个人与非商业用途可自由使用、修改和分发；商业用途需另行取得著作权人的书面授权。
 
 ---
 

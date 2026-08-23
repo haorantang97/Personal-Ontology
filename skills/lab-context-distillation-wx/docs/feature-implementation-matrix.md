@@ -24,7 +24,7 @@ This is the authoritative scope audit. A reference page or interface does not co
 | Raw DB, keys, paths, contacts, and identity alias map remain local | yes | yes | no | Real-device privacy observation pending |
 | Deterministic identity pseudonyms before release | yes | yes | no | Exact-name matching cannot replace contextual human review |
 | Public package contains only synthetic data | yes | yes | n/a | Publication scan must be rerun on the final archive |
-| Custom view/personal-noncommercial license | yes | n/a | n/a | Draft requires qualified lawyer review before publication |
+| Noncommercial license (PolyForm Noncommercial 1.0.0, repository-wide) | yes | n/a | n/a | Standard license text; connector legal boundary still needs qualified review |
 | Clean-room design, fixtures, source-overlap checks, notices | yes | yes | n/a | Independent behavioral-agent audit unavailable in this run |
 
 ## B. macOS / Windows WeChat 4.x local connection

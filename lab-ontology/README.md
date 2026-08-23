@@ -139,7 +139,7 @@ cd ../.. && node ops/validate-vault.mjs                    # 对骨架校验通�
 
 网关启动探针（不需要 GBrain）：连接 `server.mjs`，`listTools` 应返回恰好 13 个 `knowledge_*` 工具。仓库的 CI 工作流 [`ci.yml`](../.github/workflows/ci.yml) 就是跑这三步。
 
-端到端检查 `npm run test:smoke` 需要 GBrain + Ollama 和一个有内容的 Vault；`smoke-test.mjs` 里的 `cases` 引用原始 Vault 的页面 slug，请换成你自己的页面。
+端到端检查 `npm run test:smoke` 需要 GBrain + Ollama 和一个有内容的 Vault。检索用例放在 `ops/gateway/smoke-cases.json`（`[查询, 期望命中的页面 slug]` 数组，随仓库提供的是作者 Vault 的示例），把它换成你自己的页面，或用 `SMOKE_CASES=<path>` 指向别的文件。
 
 ## Privacy
 
@@ -166,8 +166,8 @@ cd ../.. && node ops/validate-vault.mjs                    # 对骨架校验通�
 
 ## License
 
-本模块采用“公开可查看、个人非商业使用”的[许可草案](LICENSE.md)。商业使用、企业部署、客户交付、再包装或再分发需要权利人的书面授权；正式公开发布前仍需律师复核。第三方组件见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+本模块采用 [PolyForm Noncommercial License 1.0.0](LICENSE.md)（全文见仓库根目录）：个人与非商业用途可自由使用、修改和分发；商业用途需另行取得著作权人的书面授权。第三方组件见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ## Provenance
 
-`vault/ops/` 是作者本地 Vault 治理层的快照（gateway 1.6.0，schema pack `agent-decision-memory` 1.1.1）。相对原件只做了两处可移植性修改：`server.mjs` 与 `sync-graph.mjs` 中 `GBRAIN_BIN` 的默认值从作者机器的绝对路径改为 `~/.bun/bin/gbrain`，`ops/gateway/README.md` 中的示例路径改为占位符。`vault/README.md` 是原 Vault 的根 README，保持原样。
+`vault/ops/` 是作者本地 Vault 治理层的快照（gateway 1.6.0，schema pack `agent-decision-memory` 1.1.1）。相对原件只做了三处可移植性修改：`server.mjs` 与 `sync-graph.mjs` 中 `GBRAIN_BIN` 的默认值从作者机器的绝对路径改为 `~/.bun/bin/gbrain`；`ops/gateway/README.md` 中的示例路径改为占位符；`smoke-test.mjs` 的检索用例从代码内联改为读取 `smoke-cases.json`（或 `SMOKE_CASES` 环境变量指定的文件）。`vault/README.md` 是原 Vault 的根 README，保持原样。

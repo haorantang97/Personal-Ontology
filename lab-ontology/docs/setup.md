@@ -92,7 +92,7 @@ Then install `lab-knowledge-intake` and `lab-knowledge-retrospective` from `skil
 | Validate the vault | `node ops/validate-vault.mjs` |
 | Rebuild graph edges from frontmatter links | `node ops/sync-graph.mjs` |
 | Index out of date after an approved write | call `knowledge_repair_index` (do not run `gbrain` by hand from an agent) |
-| Full end-to-end check | `cd ops/gateway && npm run test:smoke` — requires GBrain + Ollama and a populated vault; the shipped cases reference the original vault's page slugs, so adapt `cases` in `smoke-test.mjs` to your own pages. |
+| Full end-to-end check | `cd ops/gateway && npm run test:smoke` — requires GBrain + Ollama and a populated vault. Search cases are read from `ops/gateway/smoke-cases.json` (`[query, expectedSlug]` pairs; the shipped file lists the author's pages), or from the file named by `SMOKE_CASES`. |
 
 Never run unattended `gbrain dream` or `gbrain autopilot` against this source; the rules in `ops/AGENTS.md` forbid unattended mutation.
 

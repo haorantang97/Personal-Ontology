@@ -26,4 +26,5 @@ runtime/build dependency.
   from the source-task requirements and independently designed in this repo.
 
 This page is an idea-provenance record, not a third-party license grant. The
-project's custom publication/license draft still requires qualified legal review.
+project is licensed under the PolyForm Noncommercial License 1.0.0 (see the
+repository root `LICENSE.md`).

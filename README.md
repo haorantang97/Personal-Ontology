@@ -83,10 +83,10 @@ flowchart LR
 | 模块 | 状态 | 验证方式 |
 | --- | --- | --- |
 | `lab-ontology` | 作者 Vault 上每日运行的系统快照（网关 1.6.0，schema pack 1.1.1） | 30 个路由单测、Vault 校验器、网关启动探针（CI） |
-| `lab-context-distillation-wx` | v2.0.1，合成/公开 fixture 范围内验证 | 150 个 Python 测试、冻结契约 SHA-256、布局测试（CI）；真机兼容待现场验证 |
-| `lab-life-reviewer` | 可用的工作流 Skill | Skill 结构校验；无自动化测试 |
-| `lab-knowledge-retrospective` | 可用的路由 Skill | Skill 结构校验、布局测试（CI） |
-| `lab-knowledge-intake` | 可用的路由 Skill | Skill 结构校验、布局测试（CI） |
+| `lab-context-distillation-wx` | v2.0.1，合成/公开 fixture 范围内验证 | 150 个 Python 测试、字节码编译、冻结契约 SHA-256（CI）；真机兼容待现场验证 |
+| `lab-life-reviewer` | 可用的工作流 Skill | Skill 包结构测试（CI）；无行为测试 |
+| `lab-knowledge-retrospective` | 可用的路由 Skill | Skill 包结构测试、布局测试（CI） |
+| `lab-knowledge-intake` | 可用的路由 Skill | Skill 包结构测试、布局测试（CI） |
 
 ## Quick install
 
@@ -108,6 +108,7 @@ npx skills add haorantang97/Personal-Ontology --skill lab-knowledge-intake
 ```text
 Personal-Ontology/
 ├── README.md                      # 本页：介绍与目录
+├── CONTRIBUTING.md · CHANGELOG.md
 ├── LICENSE.md · THIRD_PARTY_NOTICES.md
 ├── lab-ontology/                  # 核心系统
 │   ├── README.md · docs/          # 模块手册、架构、安装
@@ -117,7 +118,7 @@ Personal-Ontology/
 │   ├── lab-life-reviewer/         # 双语参考文件
 │   ├── lab-knowledge-retrospective/
 │   └── lab-knowledge-intake/
-├── tests/                         # 仓库布局与公开边界测试
+├── tests/                         # 布局、Skill 包结构与公开边界测试
 └── .github/workflows/ci.yml
 ```
 
@@ -130,10 +131,12 @@ Personal-Ontology/
 - 任何知识库写入都必须保留精确提案和用户批准门。
 - 公开 fixture 通过不等于真实设备或具体微信小版本兼容。
 - 全库不得出现私人绝对路径；`tests/` 会在 CI 中扫描。
+- 中文为主：README 用中文撰写并在末尾附英文摘要；代码、提交信息与 CI 用英文。
+- 不直接向 `main` 推送：每项工作开分支、走 PR、CI 全绿后合并，同一时间一个会话只动一个模块。详见 [CONTRIBUTING.md](CONTRIBUTING.md)，变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## License
 
-除模块另有明确声明外，本仓库采用"公开可查看、个人非商业使用"的许可草案。商业使用、企业部署、客户交付、再包装或再分发需要权利人的书面授权。发布前仍需律师复核，详见 [LICENSE.md](LICENSE.md)。第三方组件见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+本仓库采用 [PolyForm Noncommercial License 1.0.0](LICENSE.md)：个人与非商业用途（个人学习、研究、实验、爱好项目，以及慈善、教育、公共研究、公共安全与健康、环保、政府机构的使用）可自由查看、使用、修改和分发；任何商业用途需另行取得著作权人的书面授权。各模块不再单独维护许可文本，其 `LICENSE.md` 只指向根目录。第三方组件见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ---
 

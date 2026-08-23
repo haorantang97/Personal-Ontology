@@ -54,14 +54,16 @@ function payload(toolResult) {
   return JSON.parse(text);
 }
 
-const cases = [
-  ["普通人做短视频为什么不应该迷信精准粉和发布时间", "methods/short-video-user-judgment-model"],
-  ["回忆录产品中购买者和讲述者不是同一个人时应该怎么设计", "syntheses/memoir-product-strategy"],
-  ["如何判断外贸名片线索", "methods/foreign-trade-business-card-lead-qualification"],
-  ["不可靠叙述如何设计线索和揭示", "methods/unreliable-narration-gap-design"],
-  ["销售应该看外向性还是倾听适应能力", "concepts/sales-listening-adaptability"],
-  ["TimeLoom 当前产品原则", "projects/timeloom"],
-];
+// Search cases are vault-specific: each entry is [query, expected result slug].
+// They live in smoke-cases.json next to this file (override with SMOKE_CASES=<path>)
+// so the test can be pointed at any populated vault without editing code.
+const casesPath = process.env.SMOKE_CASES
+  ? path.resolve(process.env.SMOKE_CASES)
+  : path.join(HERE, "smoke-cases.json");
+const cases = JSON.parse(readFileSync(casesPath, "utf8"));
+if (!Array.isArray(cases) || cases.some((entry) => !Array.isArray(entry) || entry.length !== 2)) {
+  throw new Error(`${casesPath} must be a JSON array of [query, expectedSlug] pairs.`);
+}
 
 try {
   await client.connect(transport);
