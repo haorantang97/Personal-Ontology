@@ -1,0 +1,90 @@
+{
+  "$id": "https://raw.githubusercontent.com/haorantang97/Personal-Ontology/main/lab-trust-core/schemas/policy.schema.json",
+  "title": "Knowledge Trust Policy",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "use_requirements": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": [
+          "idea_generation",
+          "copywriting_inspiration",
+          "interview_question",
+          "experiment_hypothesis",
+          "low_risk_action",
+          "default_answer",
+          "operational_decision",
+          "high_risk_decision",
+          "public_factual_claim"
+        ]
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "minimum_maturity": {
+            "type": "string",
+            "enum": [
+              "seed",
+              "corroborated",
+              "validated"
+            ]
+          },
+          "source_allowed": {
+            "type": "boolean"
+          },
+          "attribution_required": {
+            "type": "boolean"
+          },
+          "allowed_claim_types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "fact",
+                "source_opinion",
+                "agent_inference",
+                "promotional_claim",
+                "rhetoric_strategy",
+                "unverified_hypothesis"
+              ]
+            }
+          }
+        },
+        "required": [
+          "minimum_maturity",
+          "source_allowed",
+          "attribution_required",
+          "allowed_claim_types"
+        ],
+        "additionalProperties": false
+      },
+      "required": [
+        "idea_generation",
+        "copywriting_inspiration",
+        "interview_question",
+        "experiment_hypothesis",
+        "low_risk_action",
+        "default_answer",
+        "operational_decision",
+        "high_risk_decision",
+        "public_factual_claim"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "use_requirements"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,59 @@
+{
+  "id": "source-synthetic-rhetoric-001",
+  "record_type": "source",
+  "title": "Synthetic attention-stage rhetoric observation",
+  "maturity": "seed",
+  "evidence_status": "One synthetic external source family; causal effects remain unverified.",
+  "provenance_class": "external",
+  "source_family": "synthetic-creator-a",
+  "allowed_uses": [
+    "copywriting_inspiration",
+    "experiment_hypothesis"
+  ],
+  "disallowed_uses": [
+    "default_answer",
+    "operational_decision",
+    "public_factual_claim"
+  ],
+  "scope": [
+    "attention-stage sales copy"
+  ],
+  "failure_conditions": [
+    "the wording implies an unsupported guarantee"
+  ],
+  "claims": [
+    {
+      "claim_id": "C-01",
+      "statement": "A low-friction promise may increase initial attention.",
+      "claim_type": "rhetoric_strategy",
+      "direct_evidence": [
+        "synthetic transcript line 12"
+      ],
+      "sample_size": 1,
+      "interest_disclosure": "The speaker sells a related service.",
+      "allowed_uses": [
+        "copywriting_inspiration",
+        "experiment_hypothesis"
+      ],
+      "disallowed_uses": [
+        "default_answer",
+        "operational_decision",
+        "public_factual_claim"
+      ],
+      "counterevidence": [],
+      "evidence_gaps": [
+        "no controlled conversion evidence"
+      ],
+      "scope": [
+        "attention-stage sales copy"
+      ],
+      "failure_conditions": [
+        "the promise cannot be operationally supported"
+      ],
+      "next_verification": [
+        "run an attributed A/B test without factual guarantees"
+      ]
+    }
+  ],
+  "evidence_refs": []
+}

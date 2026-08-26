@@ -1,0 +1,257 @@
+{
+  "$id": "https://raw.githubusercontent.com/haorantang97/Personal-Ontology/main/lab-trust-core/schemas/knowledge-record.schema.json",
+  "title": "Knowledge Trust Record",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "record_type": {
+      "type": "string",
+      "enum": [
+        "source",
+        "result"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "maturity": {
+      "type": "string",
+      "enum": [
+        "seed",
+        "corroborated",
+        "validated"
+      ]
+    },
+    "evidence_status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provenance_class": {
+      "type": "string",
+      "enum": [
+        "first_party",
+        "external",
+        "system_observation",
+        "mixed"
+      ]
+    },
+    "source_family": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allowed_uses": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "idea_generation",
+          "copywriting_inspiration",
+          "interview_question",
+          "experiment_hypothesis",
+          "low_risk_action",
+          "default_answer",
+          "operational_decision",
+          "high_risk_decision",
+          "public_factual_claim"
+        ]
+      }
+    },
+    "disallowed_uses": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "idea_generation",
+          "copywriting_inspiration",
+          "interview_question",
+          "experiment_hypothesis",
+          "low_risk_action",
+          "default_answer",
+          "operational_decision",
+          "high_risk_decision",
+          "public_factual_claim"
+        ]
+      }
+    },
+    "scope": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "failure_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "claim_type": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "source_opinion",
+              "agent_inference",
+              "promotional_claim",
+              "rhetoric_strategy",
+              "unverified_hypothesis"
+            ]
+          },
+          "direct_evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "sample_size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "interest_disclosure": {
+            "type": "string",
+            "minLength": 1
+          },
+          "allowed_uses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "idea_generation",
+                "copywriting_inspiration",
+                "interview_question",
+                "experiment_hypothesis",
+                "low_risk_action",
+                "default_answer",
+                "operational_decision",
+                "high_risk_decision",
+                "public_factual_claim"
+              ]
+            }
+          },
+          "disallowed_uses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "idea_generation",
+                "copywriting_inspiration",
+                "interview_question",
+                "experiment_hypothesis",
+                "low_risk_action",
+                "default_answer",
+                "operational_decision",
+                "high_risk_decision",
+                "public_factual_claim"
+              ]
+            }
+          },
+          "counterevidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "evidence_gaps": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "scope": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "failure_conditions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "next_verification": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "claim_id",
+          "statement",
+          "claim_type",
+          "direct_evidence",
+          "sample_size",
+          "interest_disclosure",
+          "allowed_uses",
+          "disallowed_uses",
+          "counterevidence",
+          "evidence_gaps",
+          "scope",
+          "failure_conditions",
+          "next_verification"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "policy_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policy_version": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "id",
+    "record_type",
+    "title",
+    "maturity",
+    "evidence_status",
+    "allowed_uses",
+    "disallowed_uses",
+    "scope",
+    "failure_conditions",
+    "claims",
+    "evidence_refs"
+  ],
+  "additionalProperties": false
+}

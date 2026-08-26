@@ -1,0 +1,100 @@
+{
+  "$id": "https://raw.githubusercontent.com/haorantang97/Personal-Ontology/main/lab-trust-core/schemas/verdict.schema.json",
+  "title": "Knowledge Use Verdict",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "claim_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "intended_use": {
+      "type": "string",
+      "enum": [
+        "idea_generation",
+        "copywriting_inspiration",
+        "interview_question",
+        "experiment_hypothesis",
+        "low_risk_action",
+        "default_answer",
+        "operational_decision",
+        "high_risk_decision",
+        "public_factual_claim"
+      ]
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "allow",
+        "allow_with_limits",
+        "deny"
+      ]
+    },
+    "effective_maturity": {
+      "type": "string",
+      "enum": [
+        "seed",
+        "corroborated",
+        "validated"
+      ]
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "explanation": {
+      "type": "string"
+    },
+    "required_attribution": {
+      "type": "boolean"
+    },
+    "required_caveats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "promotion_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "policy_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policy_version": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "record_id",
+    "intended_use",
+    "decision",
+    "effective_maturity",
+    "reason_codes",
+    "explanation",
+    "required_attribution",
+    "required_caveats",
+    "evidence_gaps",
+    "promotion_blockers",
+    "policy_id",
+    "policy_version"
+  ],
+  "additionalProperties": false
+}

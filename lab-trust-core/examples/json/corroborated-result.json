@@ -1,0 +1,61 @@
+{
+  "id": "result-synthetic-method-001",
+  "record_type": "result",
+  "title": "Synthetic bounded operating method",
+  "maturity": "corroborated",
+  "evidence_status": "Supported by two independent synthetic source families.",
+  "allowed_uses": [
+    "low_risk_action",
+    "default_answer",
+    "operational_decision"
+  ],
+  "disallowed_uses": [
+    "high_risk_decision",
+    "public_factual_claim"
+  ],
+  "scope": [
+    "ordinary internal workflow"
+  ],
+  "failure_conditions": [
+    "legal, medical, financial, or safety-critical use"
+  ],
+  "claims": [
+    {
+      "claim_id": "C-METHOD",
+      "statement": "A bounded workflow may be repeatable in ordinary internal operations.",
+      "claim_type": "fact",
+      "direct_evidence": [
+        "source-synthetic-family-a",
+        "source-synthetic-family-b"
+      ],
+      "sample_size": 2,
+      "interest_disclosure": "No direct commercial incentive is declared.",
+      "allowed_uses": [
+        "low_risk_action",
+        "default_answer",
+        "operational_decision"
+      ],
+      "disallowed_uses": [
+        "high_risk_decision",
+        "public_factual_claim"
+      ],
+      "counterevidence": [],
+      "evidence_gaps": [
+        "no high-risk validation"
+      ],
+      "scope": [
+        "ordinary internal workflow"
+      ],
+      "failure_conditions": [
+        "high-risk use"
+      ],
+      "next_verification": [
+        "run controlled review before expanding scope"
+      ]
+    }
+  ],
+  "evidence_refs": [
+    "source-synthetic-family-a",
+    "source-synthetic-family-b"
+  ]
+}

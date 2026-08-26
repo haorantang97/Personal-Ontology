@@ -1,0 +1,75 @@
+{
+  "name": "lab-trust-core",
+  "version": "0.1.0",
+  "description": "Portable evidence and maturity policy for Agent-facing knowledge systems",
+  "license": "MIT",
+  "keywords": [
+    "knowledge-base",
+    "ai-agents",
+    "evidence",
+    "trust-policy",
+    "mcp",
+    "obsidian"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haorantang97/Personal-Ontology.git",
+    "directory": "lab-trust-core"
+  },
+  "homepage": "https://github.com/haorantang97/Personal-Ontology/tree/main/lab-trust-core#readme",
+  "bugs": {
+    "url": "https://github.com/haorantang97/Personal-Ontology/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    },
+    "./markdown": {
+      "types": "./dist/src/markdown/parse.d.ts",
+      "import": "./dist/src/markdown/parse.js"
+    },
+    "./mcp": {
+      "types": "./dist/src/mcp/server.d.ts",
+      "import": "./dist/src/mcp/server.js"
+    }
+  },
+  "bin": {
+    "lab-trust": "./dist/src/cli.js",
+    "lab-trust-mcp": "./dist/src/mcp/server.js"
+  },
+  "files": [
+    "dist",
+    "schemas",
+    "examples",
+    "assets",
+    "docs",
+    "CONTRIBUTING.md",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "clean": "node --eval \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc -p tsconfig.json && node dist/scripts/generate-schemas.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "privacy-check": "tsx scripts/privacy-check.ts",
+    "prepack": "npm run build && npm run privacy-check",
+    "verify": "npm run typecheck && npm test && npm run build && npm run privacy-check && npm pack --dry-run --json"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "yaml": "2.9.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.3.0",
+    "tsx": "4.23.12",
+    "typescript": "7.0.2"
+  }
+}

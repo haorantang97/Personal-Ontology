@@ -93,7 +93,8 @@ class RepositoryLayoutTests(unittest.TestCase):
             re.compile("019fa20f" + r"-3c7f-7f73-9a0a-82184b30f8bf"),
         ]
         for path in ROOT.rglob("*"):
-            if ".git" in path.parts or "__pycache__" in path.parts or not path.is_file():
+            generated_parts = {".git", "__pycache__", "node_modules", "dist"}
+            if generated_parts.intersection(path.parts) or not path.is_file():
                 continue
             text = path.read_text(encoding="utf-8", errors="ignore")
             for pattern in forbidden:
