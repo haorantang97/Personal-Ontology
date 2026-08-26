@@ -419,7 +419,7 @@ Expected: exit code 0 without any `lab-ontology` or root-repository files.
 ```bash
 git diff --check
 git status --short
-git grep -nE '/Users/[^/[:space:]]+/|\.gbrain/change-proposals|BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY' -- ':!docs/superpowers/specs' ':!docs/superpowers/plans'
+python3 -m unittest tests.test_repository_layout.RepositoryLayoutTests.test_public_repository_has_no_private_absolute_path_or_source_thread -v
 ```
 
 Expected: no whitespace errors, no unexpected files, and no private marker in the shipped Trust Core or public documentation.
