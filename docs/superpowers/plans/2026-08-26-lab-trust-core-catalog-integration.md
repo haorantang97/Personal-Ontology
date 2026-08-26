@@ -6,6 +6,8 @@
 
 **Architecture:** `lab-trust-core/` is a self-contained TypeScript package with SDK, CLI, read-only MCP, schemas, examples, tests and an MIT license. It remains independent from `lab-ontology`; the root catalogue presents one complete system, one Trust Core and four Skills without making either core a dependency. Root layout tests and CI enforce the package boundary, branding, licensing and Node 20/24 verification.
 
+**Deferred grouping decision:** Do not introduce a `module` concept or `modules/` directory while `lab-trust-core` is the only core of its kind. Reconsider a shared category only after a second independently distributable peer exists, through a separate design change.
+
 **Tech Stack:** TypeScript, Node.js 20/24, npm, Python `unittest`, GitHub Actions, Markdown, JSON Schema.
 
 ---
