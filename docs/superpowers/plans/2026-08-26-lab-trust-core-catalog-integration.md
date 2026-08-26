@@ -16,6 +16,7 @@
 - Create `tests/test_lab_trust_core_layout.py`: repository-level contract for placement, package identity, independence, catalogue, license and CI.
 - Modify `README.md`: Chinese catalogue, architecture, status, installation and license exception.
 - Modify `README.en.md`: English parity for the same catalogue contract.
+- Modify `LICENSE.md`: declare that `lab-trust-core/` is governed by its own MIT license.
 - Modify `THIRD_PARTY_NOTICES.md`: add the new top-level Trust Core.
 - Modify `CHANGELOG.md`: record the new public component.
 - Modify `.github/workflows/ci.yml`: run `lab-trust-core` verification on Node 20 and 24.
@@ -171,6 +172,7 @@ git commit -m "feat: add standalone lab trust core"
 - Modify: `tests/test_lab_trust_core_layout.py`
 - Modify: `README.md`
 - Modify: `README.en.md`
+- Modify: `LICENSE.md`
 - Create: `lab-trust-core/THIRD_PARTY_NOTICES.md`
 - Modify: `THIRD_PARTY_NOTICES.md`
 - Modify: `CHANGELOG.md`
@@ -197,12 +199,15 @@ Append these methods to `LabTrustCoreLayoutTests`:
         core_license = (CORE / "LICENSE").read_text(encoding="utf-8")
         root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
         english_readme = (ROOT / "README.en.md").read_text(encoding="utf-8")
+        root_license = (ROOT / "LICENSE.md").read_text(encoding="utf-8")
         notices = (ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
         self.assertIn("MIT License", core_license)
         self.assertIn("lab-trust-core", root_readme)
         self.assertIn("MIT", root_readme)
         self.assertIn("lab-trust-core", english_readme)
         self.assertIn("MIT", english_readme)
+        self.assertIn("lab-trust-core/", root_license)
+        self.assertIn("MIT License", root_license)
         self.assertIn("lab-trust-core/THIRD_PARTY_NOTICES.md", notices)
 ```
 
@@ -236,6 +241,14 @@ Add this explicit exception to both root license sections:
 Exception: `lab-trust-core/` is independently licensed under the MIT License in `lab-trust-core/LICENSE`; the repository-root PolyForm Noncommercial terms do not replace that Trust Core license.
 ```
 
+Prepend this scope notice to `LICENSE.md`, before the PolyForm terms:
+
+```markdown
+## License scope
+
+The `lab-trust-core/` directory is licensed separately under the MIT License in `lab-trust-core/LICENSE`. The PolyForm Noncommercial License below applies to the remainder of this repository and does not replace the license for that directory.
+```
+
 Add `lab-trust-core/THIRD_PARTY_NOTICES.md` to the root notices list and record the Trust Core addition in `CHANGELOG.md` under an unreleased section.
 
 - [ ] **Step 5: Verify GREEN**
@@ -252,7 +265,7 @@ Expected: all repository layout and package tests pass.
 - [ ] **Step 6: Commit the catalogue closure**
 
 ```bash
-git add README.md README.en.md THIRD_PARTY_NOTICES.md CHANGELOG.md lab-trust-core/THIRD_PARTY_NOTICES.md tests/test_lab_trust_core_layout.py
+git add README.md README.en.md LICENSE.md THIRD_PARTY_NOTICES.md CHANGELOG.md lab-trust-core/THIRD_PARTY_NOTICES.md tests/test_lab_trust_core_layout.py
 git commit -m "docs: catalogue lab trust core"
 ```
 
