@@ -75,6 +75,17 @@ class LabTrustCoreLayoutTests(unittest.TestCase):
         self.assertIn("MIT License", root_license)
         self.assertIn("lab-trust-core/THIRD_PARTY_NOTICES.md", notices)
 
+    def test_ci_verifies_and_packages_the_core(self):
+        ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        release = (ROOT / ".github" / "workflows" / "release-lab-trust-core.yml").read_text(encoding="utf-8")
+        self.assertIn("lab-trust-core:", ci)
+        self.assertIn("node-version: [20, 24]", ci)
+        self.assertIn("working-directory: lab-trust-core", ci)
+        self.assertIn("npm run verify", ci)
+        self.assertIn("lab-trust-core-v*", release)
+        self.assertIn("npm pack --silent", release)
+        self.assertIn("gh release create", release)
+
 
 if __name__ == "__main__":
     unittest.main()
