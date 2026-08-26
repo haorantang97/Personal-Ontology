@@ -13,13 +13,13 @@
 ![MCP](https://img.shields.io/badge/protocol-MCP-6b4fbb)
 ![Source of truth: Markdown + Git](https://img.shields.io/badge/source%20of%20truth-Markdown%20%2B%20Git-556)
 
-[Overview](#the-big-picture) · [Why](#how-this-differs-from-automatic-memory) · [Core system](#core-system-lab-ontology) · [Skills](#skills-ordered-by-the-flow-of-knowledge) · [Install](#quick-install) · [Status](#module-status) · [FAQ](#faq) · [Changelog](CHANGELOG.md)
+[Overview](#the-big-picture) · [Why](#how-this-differs-from-automatic-memory) · [Core system](#core-system-lab-ontology) · [Trust Core](#trust-core-lab-trust-core) · [Skills](#skills-ordered-by-the-flow-of-knowledge) · [Install](#quick-install) · [Status](#status) · [FAQ](#faq) · [Changelog](CHANGELOG.md)
 
 </div>
 
 **Let AI agents maintain knowledge about you — long-term, traceably, and only with your approval.**
 
-This is an original personal-ontology workbench: one knowledge system (`lab-ontology`) plus four skills that work on top of it. It addresses the three chronic problems of agent memory — fragments with no structure, claims with no provenance, and silent rewrites you never approved — with three positions:
+This is an original personal-ontology workbench: one complete knowledge system (`lab-ontology`), one independently usable Trust Core (`lab-trust-core`), and four Skills around the flow of knowledge. It addresses the three chronic problems of agent memory — fragments with no structure, claims with no provenance, and silent rewrites you never approved — with three positions:
 
 1. **Markdown and Git are the only source of truth.** Vectors, graphs and search indexes are derived layers that can be rebuilt at any time; switching engines never loses knowledge.
 2. **Every write is a proposal.** Any agent can read, but none can write directly. Each change is an exact, content-baselined proposal; only after you approve it in the conversation does the gateway validate, commit to Git and rebuild the index.
@@ -51,6 +51,9 @@ flowchart LR
     GW -- "commit after user approval" --> V
     V -. "rebuildable" .-> IX
     AG["Any agent (Claude / Codex / Hermes…)"] -- "knowledge_route / search / get" --> GW
+    TC["lab-trust-core · Trust Core<br/>independent SDK / CLI / read-only MCP"]
+    GW -. "optional composition; not a current runtime dependency" .-> TC
+    EXT["Other knowledge systems / RAG / agents"] -. "use independently" .-> TC
 ```
 
 Left to right is the flow of knowledge: **collect** material from existing records or interviews, let the retrospective stage **decide what deserves to survive**, then **file** it through the proposal workflow. Every agent reads through the same gateway, from the same vault.
@@ -81,6 +84,14 @@ The trade-off is explicit: this is heavier than "install and forget" — it runs
 
 It is not prompt-only: the gateway carries 30 router unit tests, and CI runs the validator, the tests and a boot probe on every push. The derived index engine (GBrain + Ollama) is an external dependency documented in setup; no personal knowledge of the author ships with the repository.
 
+## Trust Core: `lab-trust-core`
+
+[Trust Core docs](lab-trust-core/README.md) · [Data model](lab-trust-core/docs/model.md) · [Integration](lab-trust-core/docs/integration.md)
+
+`lab-trust-core` receives a structured knowledge record and an intended use, returns an explainable `allow`, `review`, or `deny` verdict, and checks whether the record can advance from `seed` to `corroborated` or `validated`. It counts independent source families rather than repeated posts from the same upstream source.
+
+It is neither a second knowledge base nor a Skill: it stores, retrieves and writes nothing, requires no `lab-ontology`, and can be embedded through its SDK, CLI or read-only MCP in any knowledge base, RAG pipeline or agent. The current `lab-ontology` snapshot still applies its own schema, agent rules and partial validation and does not declare `lab-trust-core` as a runtime dependency; adapting them later is separate work and is not required to use the Trust Core.
+
 ## Skills, ordered by the flow of knowledge
 
 | Stage | Skill | Input | Output | Docs |
@@ -100,11 +111,12 @@ It is not prompt-only: the gateway carries 30 router unit tests, and CI runs the
 
 All four are provider-neutral: Codex, Claude Code and any MCP client share the same `SKILL.md`, differing only in install location.
 
-## Module status
+## Status
 
-| Module | Status | Verified by |
+| Component | Status | Verified by |
 | --- | --- | --- |
 | `lab-ontology` | Snapshot of a system running daily on the author's vault (gateway 1.6.0, schema pack 1.1.1) | 30 router unit tests, vault validator, gateway boot probe (CI) |
+| `lab-trust-core` | v0.1.0, independently installable Trust Core | 50 deterministic tests, Node 20/24, typecheck, build, privacy and package verification (CI) |
 | `lab-context-distillation-wx` | v2.0.1, verified within synthetic/public-fixture scope | 150 Python tests, bytecode compile, frozen contract SHA-256 (CI); real-device compatibility pending field validation |
 | `lab-life-reviewer` | Working workflow skill | Skill package tests (CI); no behavioral tests |
 | `lab-knowledge-retrospective` | Working router skill | Skill package and layout tests (CI) |
@@ -113,6 +125,17 @@ All four are provider-neutral: Codex, Claude Code and any MCP client share the s
 ## Quick install
 
 The system: copy `lab-ontology/vault/` as your own vault and register its MCP gateway with your agent — steps in [lab-ontology/README.md](lab-ontology/README.md).
+
+The Trust Core can be checked out without the other components:
+
+```bash
+git clone --filter=blob:none --no-checkout https://github.com/haorantang97/Personal-Ontology.git
+cd Personal-Ontology
+git sparse-checkout init --cone
+git sparse-checkout set lab-trust-core
+git checkout main
+cd lab-trust-core && npm ci && npm run verify
+```
 
 The skills, via the community Agent Skills installer:
 
@@ -135,8 +158,8 @@ Copying the complete skill directory works too. Codex, Claude Code, direct use a
 
 **Why are the skills so thin?** The schema, routing and approval rules come from the gateway's `knowledge_intake` response; skills only route the agent there. Every host writes the same format, and the schema evolves without republishing skills.
 
-**Can I use it commercially?** Personal and noncommercial use is free; commercial use needs a written license — see below.
+**Can I use it commercially?** `lab-trust-core/` is MIT-licensed and may be used commercially under that license. The rest of the repository is free for personal and noncommercial use; commercial use needs a written license — see below.
 
 ## License
 
-[PolyForm Noncommercial License 1.0.0](LICENSE.md): free to view, use, modify and distribute for personal and noncommercial purposes; any commercial use requires a separate written license from the copyright holder. Module `LICENSE.md` files point to the repository root. Third-party components are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Except for the explicit exception below, the repository uses the [PolyForm Noncommercial License 1.0.0](LICENSE.md): free to view, use, modify and distribute for personal and noncommercial purposes; any commercial use requires a separate written license from the copyright holder. **Exception: `lab-trust-core/` is independently licensed under the [MIT License](lab-trust-core/LICENSE); the repository-root PolyForm terms do not replace that license.** Third-party components are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -1,3 +1,10 @@
+## License scope
+
+The `lab-trust-core/` directory is licensed separately under the MIT License in
+`lab-trust-core/LICENSE`. The PolyForm Noncommercial License below applies to
+the remainder of this repository and does not replace the license for that
+directory.
+
 Required Notice: Copyright 2026 Haoran Tang (https://github.com/haorantang97)
 
 # PolyForm Noncommercial License 1.0.0

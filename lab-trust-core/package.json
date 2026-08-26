@@ -51,7 +51,8 @@
     "CONTRIBUTING.md",
     "README.md",
     "LICENSE",
-    "SECURITY.md"
+    "SECURITY.md",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
     "clean": "node --eval \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",

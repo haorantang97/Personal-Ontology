@@ -6,6 +6,13 @@ tags (`vX.Y.Z`). Module-internal versions are noted in the entries.
 
 ## [Unreleased]
 
+### Added
+
+- `lab-trust-core` — a standalone, MIT-licensed trust-policy core with SDK,
+  CLI, read-only MCP, JSON Schemas, Markdown adapter, synthetic examples and
+  50 deterministic tests. It can be installed without `lab-ontology` and is
+  catalogued between the complete system and the four Skills.
+
 ## [0.1.0] - 2026-08-23
 
 First catalogued release.
