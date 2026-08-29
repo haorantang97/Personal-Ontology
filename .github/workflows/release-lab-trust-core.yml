@@ -46,8 +46,10 @@ jobs:
       - name: Publish standalone package asset
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >-
-          gh release create "$RELEASE_TAG"
-          "${{ steps.pack.outputs.artifact }}"
-          --title "Lab Trust Core ${RELEASE_TAG#lab-trust-core-v}"
-          --generate-notes
+        run: |
+          gh release create "$RELEASE_TAG" \
+            "${{ steps.pack.outputs.artifact }}" \
+            --title "Lab Trust Core ${RELEASE_TAG#lab-trust-core-v}" \
+            --generate-notes \
+            --draft
+          gh release edit "$RELEASE_TAG" --draft=false

@@ -100,6 +100,14 @@ class LabTrustCoreLayoutTests(unittest.TestCase):
         self.assertIn("ref: ${{ env.RELEASE_TAG }}", release)
         self.assertIn('gh release create "$RELEASE_TAG"', release)
 
+    def test_release_uploads_assets_before_publishing_for_immutability(self):
+        release = (ROOT / ".github" / "workflows" / "release-lab-trust-core.yml").read_text(encoding="utf-8")
+        create = release.index('gh release create "$RELEASE_TAG"')
+        draft = release.index("--draft", create)
+        publish = release.index('gh release edit "$RELEASE_TAG" --draft=false', draft)
+        self.assertLess(create, draft)
+        self.assertLess(draft, publish)
+
 
 if __name__ == "__main__":
     unittest.main()
