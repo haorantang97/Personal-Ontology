@@ -86,6 +86,20 @@ class LabTrustCoreLayoutTests(unittest.TestCase):
         self.assertIn("npm pack --silent", release)
         self.assertIn("gh release create", release)
 
+    def test_release_extracts_only_the_tgz_filename_from_prepack_output(self):
+        release = (ROOT / ".github" / "workflows" / "release-lab-trust-core.yml").read_text(encoding="utf-8")
+        self.assertIn("set -o pipefail", release)
+        self.assertIn("| tail -n 1", release)
+        self.assertIn('test -f "$artifact"', release)
+        self.assertNotIn('echo "artifact=$(npm pack --silent)"', release)
+
+    def test_release_can_recover_a_failed_tag_without_moving_the_tag(self):
+        release = (ROOT / ".github" / "workflows" / "release-lab-trust-core.yml").read_text(encoding="utf-8")
+        self.assertIn("workflow_dispatch:", release)
+        self.assertIn("release_tag:", release)
+        self.assertIn("ref: ${{ env.RELEASE_TAG }}", release)
+        self.assertIn('gh release create "$RELEASE_TAG"', release)
+
 
 if __name__ == "__main__":
     unittest.main()

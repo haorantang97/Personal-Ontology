@@ -4,9 +4,18 @@ on:
   push:
     tags:
       - "lab-trust-core-v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Existing lab-trust-core-v* tag to package"
+        required: true
+        type: string
 
 permissions:
   contents: write
+
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
 
 jobs:
   release:
@@ -16,6 +25,8 @@ jobs:
         working-directory: lab-trust-core
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -27,12 +38,16 @@ jobs:
         run: npm run verify
       - id: pack
         name: Build standalone package asset
-        run: echo "artifact=$(npm pack --silent)" >> "$GITHUB_OUTPUT"
+        run: |
+          set -o pipefail
+          artifact="$(npm pack --silent | tail -n 1)"
+          test -f "$artifact"
+          printf 'artifact=%s\n' "$artifact" >> "$GITHUB_OUTPUT"
       - name: Publish standalone package asset
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
-          gh release create "$GITHUB_REF_NAME"
+          gh release create "$RELEASE_TAG"
           "${{ steps.pack.outputs.artifact }}"
-          --title "Lab Trust Core ${GITHUB_REF_NAME#lab-trust-core-v}"
+          --title "Lab Trust Core ${RELEASE_TAG#lab-trust-core-v}"
           --generate-notes
