@@ -17,6 +17,10 @@ permissions:
 env:
   RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
 
+concurrency:
+  group: release-lab-trust-core-${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -27,6 +31,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.RELEASE_TAG }}
+      - name: Validate exact release tag
+        run: |
+          case "$RELEASE_TAG" in
+            lab-trust-core-v*) ;;
+            *) echo "Invalid Lab Trust Core release tag." >&2; exit 1 ;;
+          esac
+          git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"
+          test "$(git rev-parse HEAD)" = "$(git rev-list -n 1 "$RELEASE_TAG")"
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -47,9 +59,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$RELEASE_TAG" \
-            "${{ steps.pack.outputs.artifact }}" \
-            --title "Lab Trust Core ${RELEASE_TAG#lab-trust-core-v}" \
-            --generate-notes \
-            --draft
+          if existing_draft="$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft 2>/dev/null)"; then
+            test "$existing_draft" = "true"
+            gh release upload "$RELEASE_TAG" \
+              "${{ steps.pack.outputs.artifact }}" \
+              --clobber
+          else
+            gh release create "$RELEASE_TAG" \
+              "${{ steps.pack.outputs.artifact }}" \
+              --title "Lab Trust Core ${RELEASE_TAG#lab-trust-core-v}" \
+              --generate-notes \
+              --verify-tag \
+              --draft
+          fi
           gh release edit "$RELEASE_TAG" --draft=false

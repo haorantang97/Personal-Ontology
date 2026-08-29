@@ -99,6 +99,8 @@ class LabTrustCoreLayoutTests(unittest.TestCase):
         self.assertIn("release_tag:", release)
         self.assertIn("ref: ${{ env.RELEASE_TAG }}", release)
         self.assertIn('gh release create "$RELEASE_TAG"', release)
+        self.assertIn('gh release upload "$RELEASE_TAG"', release)
+        self.assertIn("--clobber", release)
 
     def test_release_uploads_assets_before_publishing_for_immutability(self):
         release = (ROOT / ".github" / "workflows" / "release-lab-trust-core.yml").read_text(encoding="utf-8")
@@ -107,6 +109,14 @@ class LabTrustCoreLayoutTests(unittest.TestCase):
         publish = release.index('gh release edit "$RELEASE_TAG" --draft=false', draft)
         self.assertLess(create, draft)
         self.assertLess(draft, publish)
+
+    def test_release_validates_and_serializes_the_exact_tag(self):
+        release = (ROOT / ".github" / "workflows" / "release-lab-trust-core.yml").read_text(encoding="utf-8")
+        self.assertIn("concurrency:", release)
+        self.assertIn("cancel-in-progress: false", release)
+        self.assertIn('case "$RELEASE_TAG" in', release)
+        self.assertIn('refs/tags/$RELEASE_TAG', release)
+        self.assertIn("--verify-tag", release)
 
 
 if __name__ == "__main__":
