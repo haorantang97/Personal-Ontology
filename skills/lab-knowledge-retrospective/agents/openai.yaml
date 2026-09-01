@@ -1,6 +1,6 @@
 interface:
   display_name: "Lab Knowledge Retrospective / 复盘蒸馏"
-  short_description: "Distil a finished task into reusable, evidence-bounded conclusions / 把已结束的工作蒸馏成带证据边界的可复用结论"
-  default_prompt: "Use $lab-knowledge-retrospective to review what just finished: fetch the current method pages first, separate narrative from conclusions, attach evidence and sample size, and list only what survives for my approval. / 使用 $lab-knowledge-retrospective 复盘刚结束的工作：先取当前方法页，把叙事和结论分开，为每条结论附上证据与样本量，只列出经得起检验的条目等我批准。"
+  short_description: "Review short work or audit long/failed work, then distil evidence-bounded conclusions / 复盘短任务或逐轮审计长对话与失败项目，再蒸馏有边界的结论"
+  default_prompt: "Use $lab-knowledge-retrospective to review what just finished: preflight history completeness and related tasks before choosing conclusion or forensic mode; unknown, compacted or truncated history starts in forensic PARTIAL. Then fetch current method pages, audit every substantive turn and completion claim when required, report COMPLETE or PARTIAL coverage, and list only evidence-bounded conclusions for my approval. / 使用 $lab-knowledge-retrospective 复盘刚结束的工作：选择模式前先预检历史完整性与关联任务；历史未知、压缩或截断时先进入法证模式并保持 PARTIAL。随后取得当前方法页，按需逐轮核验实质性问答与完成声明，报告 COMPLETE 或 PARTIAL 覆盖状态，再列出有证据边界的候选结论等我批准。"
 policy:
   allow_implicit_invocation: true

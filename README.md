@@ -34,7 +34,7 @@ flowchart LR
         LR["lab-life-reviewer<br/>主动访谈逐事件还原"]
     end
     subgraph Distil["蒸馏 · 决定什么值得留"]
-        KR["lab-knowledge-retrospective<br/>叙事与结论分开，带证据与样本量"]
+        KR["lab-knowledge-retrospective<br/>结论复盘 / 逐轮法证审计"]
     end
     subgraph File["入库 · 提案与批准"]
         KI["lab-knowledge-intake<br/>查重 → 精确提案 → 等待批准"]
@@ -98,14 +98,14 @@ flowchart LR
 | --- | --- | --- | --- | --- |
 | 采集 | `lab-context-distillation-wx` | 微信 4.x 聊天、数据库快照或标准导出 | 经脱敏、路由、归并、验收的个人运作模型与事件账本 | [打开 Skill 文档](skills/lab-context-distillation-wx/README.md) |
 | 采集 | `lab-life-reviewer` | 你的主动讲述 + 与当前主题相关的材料 | 逐事件的 Raw 记录与结构化 handoff，批准后归档 | [打开 Skill 文档](skills/lab-life-reviewer/README.md) |
-| 蒸馏 | `lab-knowledge-retrospective` | 一段已经结束的任务、事故、访谈或长对话 | 少量带证据与样本量的可复用结论（默认为零） | [打开 Skill 文档](skills/lab-knowledge-retrospective/README.md) |
+| 蒸馏 | `lab-knowledge-retrospective` | 一段已经结束、暂停或失败的任务、事故、访谈或长对话 | 有覆盖状态的复盘审计 + 少量可复用结论（默认为零） | [打开 Skill 文档](skills/lab-knowledge-retrospective/README.md) |
 | 入库 | `lab-knowledge-intake` | 任何已决定要保留的材料：链接、文件、文本、结论 | 一份精确提案；批准后由网关写入 Vault | [打开 Skill 文档](skills/lab-knowledge-intake/README.md) |
 
 **`lab-context-distillation-wx`** 是四个里最重的一个：一条确定性的本地 Python 流水线，负责从既有记录里提取。它把采集、解密适配、身份脱敏留在本机，只让模型看到密封过的、脱敏的数据包；每条路由恰好产生一个处理结果，事件各自带语义状态，完整事件账本是权威，重要性只影响展示、不删除事件。当前状态是 v2.0.1，在合成/公开 fixture 上通过 150 个测试；它**不**宣称与任何具体微信构建的真机兼容，没有通过现场清单之前也不应该这样宣称。
 
 **`lab-life-reviewer`** 从另一头补上记录里没有的东西：由你主动讲，Agent 逐事件追问、核对相关材料、保留 Raw 细节，再形成交接包。采访和归档是同一个 Skill 里前后衔接的两个任务，用文件交接，归档任务不能依赖对采访聊天的记忆。它不会把复杂经历压成一行时间线，也不会把解释当成事实。
 
-**`lab-knowledge-retrospective`** 站在采集与入库之间，回答"这次有什么值得留下"。它先去 Vault 取当前的方法页再开始，把过程叙述和可迁移结论分开，给每条结论标上依据、样本量和 `evidence_status`，然后按 `AGENTS.md` 的合取门槛筛。大多数复盘正确的结果是零新增——一条勉强及格的页面会污染检索，比没有更贵。
+**`lab-knowledge-retrospective`** 站在采集与入库之间，回答“这次发生了什么、审计覆盖是否完整、有什么值得留下”。短任务使用结论模式；失败项目、长对话、跨任务范围和“复盘每一次问答”使用法证模式。它先取得当前方法页，再读取原始轮次、核验完成声明、关联用户纠正并报告 `COMPLETE/PARTIAL`；只有通过覆盖门后，才把叙事蒸馏成可迁移结论，并为每条候选标注证据、样本量和适用边界。大多数复盘正确的结果仍是零新增。
 
 **`lab-knowledge-intake`** 是最薄的一个，也是唯一的入口：任何材料想进 Vault，都由它先调 `knowledge_intake` 取契约、查重、生成精确提案，然后停下来等你批准。它自己不定义 Schema、不选存放位置、从不直接写文件；Schema 演进发生在网关里，Skill 不需要重新发布。
 
@@ -123,7 +123,7 @@ flowchart LR
 | `lab-trust-core` | v0.1.0，可独立安装的 Trust Core | 50 个确定性测试、Node 20/24、类型检查、构建、隐私扫描与打包预检（CI） |
 | `lab-context-distillation-wx` | v2.0.1，合成/公开 fixture 范围内验证 | 150 个 Python 测试、字节码编译、冻结契约 SHA-256（CI）；真机兼容待现场验证 |
 | `lab-life-reviewer` | 可用的工作流 Skill | Skill 包结构测试（CI）；无行为测试 |
-| `lab-knowledge-retrospective` | 可用的路由 Skill | Skill 包结构测试、布局测试（CI） |
+| `lab-knowledge-retrospective` | 可用的复盘审计 Skill | Skill 包结构、法证协议契约与布局测试（CI） |
 | `lab-knowledge-intake` | 可用的路由 Skill | Skill 包结构测试、布局测试（CI） |
 
 ## Quick install
@@ -188,11 +188,11 @@ Personal-Ontology/
 
 **没有 GBrain 和 Ollama 能用吗？** 网关能启动、能返回契约、能建提案，但检索、路由和批准落盘需要它们。它们都是本地免费软件，装法见 [setup](lab-ontology/docs/setup.md)。
 
-**我的数据会离开我的电脑吗？** 不会。Vault、索引、审批记录全在本机；本仓库只发布系统，不含任何个人内容，CI 还会扫描私人路径泄漏。
+**我的数据会离开我的电脑吗？** Vault、索引、审批记录和本仓库提供的网关按本地运行设计；本仓库不发布个人内容，并在 CI 中扫描私人绝对路径。复盘时对话历史是否离开本机，取决于你选择的 Agent 宿主、模型和隐私设置；应使用本地或已获批准的宿主，并只授予完成复盘所需的任务历史。
 
 **和 mem0 / Basic Memory 这类项目什么关系？** 同一问题空间（给 Agent 的持久记忆），不同立场：它们优先"无感自动记忆"，这里优先"可审计的知识资产"——写入有审批门，证据有成熟度。两者可以共存。
 
-**为什么 Skill 这么薄？** Schema、路由和审批规则由网关的 `knowledge_intake` 返回，Skill 只负责把 Agent 引到网关上。这样 Claude、Codex、Hermes 写出的格式完全一致，Schema 演进也不用重新发布 Skill。
+**为什么大多数 Skill 仍然很薄？** Schema、知识路由和写入审批规则由网关的当前契约返回，所以采集与入库 Skill 主要负责把 Agent 引到正确入口。`lab-knowledge-retrospective` 是例外之一：它把模式选择、逐轮账本、声明核验和覆盖门作为稳定执行协议随 Skill 发布；具体领域方法与 Schema 仍留在知识库和网关中演进。
 
 **可以商用吗？** 个人与非商业用途自由使用；商业用途需要书面授权，见 [License](#license)。
 
@@ -212,6 +212,6 @@ Personal-Ontology is an original workbench for letting AI agents maintain knowle
 
 **`lab-trust-core`** is an independent MIT-licensed policy core. Given a knowledge record and an intended use, its SDK, CLI or read-only MCP returns an explainable trust verdict and promotion check. It stores and retrieves nothing and does not require `lab-ontology`.
 
-The skills follow the flow of knowledge. **`lab-context-distillation-wx`** extracts an evidence-bounded personal operating model from existing records (WeChat 4.x exports) with a deterministic local pipeline; **`lab-life-reviewer`** collects what records never captured through interview-led life review; **`lab-knowledge-retrospective`** decides what from a finished piece of work deserves to survive, with evidence and sample size attached and zero new pages as the default; **`lab-knowledge-intake`** is the single entry point that turns anything worth keeping into an exact proposal and waits for approval.
+The skills follow the flow of knowledge. **`lab-context-distillation-wx`** extracts an evidence-bounded personal operating model from existing records (WeChat 4.x exports) with a deterministic local pipeline; **`lab-life-reviewer`** collects what records never captured through interview-led life review; **`lab-knowledge-retrospective`** audits finished, paused or failed work in conclusion or forensic mode, reports raw-turn and completion-claim coverage as `COMPLETE/PARTIAL`, then decides what deserves to survive with evidence and sample size attached; **`lab-knowledge-intake`** is the single entry point that turns anything worth keeping into an exact proposal and waits for approval.
 
 The repository root is a catalog; each component contains its authoritative installation, privacy, validation and usage documentation. No private interview content, personal evidence pages or assets are published here.
