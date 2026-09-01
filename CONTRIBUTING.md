@@ -6,7 +6,7 @@
 
 - `main` 只接受快进合并。**不要从任何会话直接向 `main` 推送**，包括 Agent 会话。
 - 每项工作开一个分支：`feat/<模块>-<主题>`、`docs/<主题>`、`fix/<主题>`。
-- 通过 Pull Request 合并；CI（布局测试、wx 模块测试、lab-ontology 网关测试）必须全绿。
+- 通过 Pull Request 合并；CI（布局与公开边界、Skill 契约、wx 模块、Trust Core、lab-ontology 网关测试）必须全绿。
 - 同一时间只让一个会话处理同一个模块。开始前先 `git fetch` 并从最新的 `main` 切分支。
 - 在 GitHub 仓库设置中为 `main` 打开 branch protection（要求 PR、要求 CI 通过、禁止 force push）。这一步只能在网页上做。
 
@@ -24,7 +24,7 @@
 
 ## 公开边界
 
-- 任何提交都不得包含私人绝对路径、Raw 访谈、聊天原文、身份、密钥、个人证据页或资产文件；`tests/test_repository_layout.py` 会扫描。
+- 任何提交都不得包含私人绝对路径、Raw 访谈、聊天原文、身份、密钥、个人证据页或资产文件。自动测试会扫描私人绝对路径等机械边界，但不能替代对 Raw 内容、身份和密钥的人工审查。
 - `lab-ontology/vault/` 的六个内容目录永远只含 `.gitkeep`。
 - 新增模块必须自带 `README.md`（含 Installation、Verify、Privacy、Uninstall）、`LICENSE.md`（指向根目录）、`THIRD_PARTY_NOTICES.md`，并在根 README 目录和 `THIRD_PARTY_NOTICES.md` 登记。
 

@@ -13,6 +13,13 @@ tags (`vX.Y.Z`). Module-internal versions are noted in the entries.
   50 deterministic tests. It can be installed without `lab-ontology` and is
   catalogued between the complete system and the four Skills.
 
+### Changed
+
+- `lab-knowledge-retrospective` now separates concise conclusion reviews from
+  forensic reviews of failed, long or cross-task work. Forensic mode audits raw
+  turns and completion claims, tracks corrections and open loops, and reports
+  `COMPLETE` or `PARTIAL` coverage before distilling reusable conclusions.
+
 ## [0.1.0] - 2026-08-23
 
 First catalogued release.
