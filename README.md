@@ -113,7 +113,7 @@ flowchart LR
 
 ## 一次完整的流转
 
-以一次人生回顾为例：`lab-life-reviewer` 在采访任务里记录一段职业经历，生成 Raw 和 handoff；归档任务读取它们，调用 `lab-knowledge-retrospective` 把叙事里能跨时间成立的结论挑出来——也许只有一条，也许没有；有结论时交给 `lab-knowledge-intake`，它先在 Vault 里检索有没有同义页面，再生成一份提案：新建一张 `source` 页记录出处与候选观点，或更新一张既有的 `project` 页。你看到的是原文级别的改动，批准后网关在临时工作树里跑校验，只提交这几个文件，同步 GBrain 索引并重建图谱边。从此任何 Agent 在相关任务开始时，都能通过 `knowledge_route` 读到这条结论，并看到它是 `seed` 还是已被多个独立来源 `corroborated`。
+以一次人生回顾为例：`lab-life-reviewer` 在采访任务里记录一段职业经历，生成 Raw 和 handoff；归档任务读取它们，调用 `lab-knowledge-retrospective` 把叙事里能跨时间成立的结论挑出来——也许只有一条，也许没有；有结论时交给 `lab-knowledge-intake`，它先读取当前 Schema 和目标页面、检索同义知识，再预检完整目标文件的字段、列表格式与双向关系，生成一份提案：新建一张 `source` 页记录出处与候选观点，或更新一张既有的 `project` 页。你看到的是原文级别的改动，批准后网关再次在临时工作树里跑校验，只提交这几个文件，同步 GBrain 索引并重建图谱边。从此任何 Agent 在相关任务开始时，都能通过 `knowledge_route` 读到这条结论，并看到它是 `seed` 还是已被多个独立来源 `corroborated`。
 
 ## 状态
 

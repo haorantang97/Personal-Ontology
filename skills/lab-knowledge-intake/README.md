@@ -2,7 +2,7 @@
 
 `lab-knowledge-intake` 是一个刻意保持轻薄的录入 Skill。它自己不定义 Schema、不决定文件放在哪里、也永远不直接写文件——它只负责把任意材料送进知识网关的提案流程，并在用户明确批准之前停下。
 
-契约由 MCP 网关的 `knowledge_intake` 返回值提供，因此 Claude Code、Codex 或任何 MCP 客户端写出的格式完全一致，Schema 演进也不需要重新发布 Skill。
+契约由 MCP 网关的 `knowledge_intake` 和当前机器 Schema 提供。Skill 不复制一份固定 Schema，但会在生成提案前读取当前契约、目标页面和同类型有效页面，避免把通用 YAML 写法或业务生命周期误当成当前 Vault 接受的字段格式。
 
 ## Prerequisite
 
@@ -37,16 +37,16 @@ npx skills add haorantang97/Personal-Ontology --skill lab-knowledge-intake
 ## Workflow
 
 1. 先调 `knowledge_intake` 取契约——Vault 位置、Schema、页面路由、排除项、审批规则与同步流程一律以它的返回值为准。
-2. 检索并读取既有知识，查重。
-3. 生成一份精确提案（create / update / delete / move）。
-4. 把提案展示给用户，等待明确批准。
-5. 批准后由网关完成校验、Git 提交与索引同步。
+2. 读取当前机器 Schema、精确目标页面和同类型有效页面，再检索查重。
+3. 对完整目标文件做提案预检：必需字段与枚举、当前列表序列化、Project 生命周期与 Schema `status` 的分离、Source/Result 双向关系。
+4. `knowledge_propose_changes` 成功后才把精确提案展示给用户，等待明确批准。
+5. 批准后由网关再次校验、Git 提交与索引同步；若校验拒绝，明确报告“未写入”，按新 Proposal ID 重新审批。
 
 Skill 本身不承担第 5 步，也不发明第二个存放位置。
 
 ## Verify
 
-安装后向 Agent 提一句“录入知识库”，正确行为是先调用 `knowledge_intake`、再给出提案并等待批准。若它直接写文件或直接回答，说明 Skill 未被加载或网关未连接。
+安装后向 Agent 提一句“把这个暂停项目的复盘录入知识库”，正确行为是先调用 `knowledge_intake`，读取当前 Schema 与目标页，把业务暂停状态和受限的 Schema `status` 分开，检查列表格式及双向关系，再给出提案并等待批准。若它直接写文件、跳过预检或在提案失败后沿用旧批准，说明 Skill 未被正确执行。
 
 ## Privacy
 

@@ -62,7 +62,7 @@ Codex 与 Claude Code 使用同一份 `SKILL.md`。
 6. 先通过覆盖门；任何历史缺口、漏审轮次或漏核验声明都会强制状态为 `PARTIAL`。
 7. 把过程叙述与可迁移结论分开，为每条候选标注证据、样本量、适用范围和失效条件。
 8. 先把复盘审计交给用户；默认可以没有任何长期知识候选。
-9. 用户要求入库时先取得 `knowledge_intake` 当前契约，再交给 `lab-knowledge-intake` 走精确提案与审批流程。
+9. 用户要求入库时交给 `lab-knowledge-intake`：先取得当前 intake 与机器 Schema，读取目标页，预检字段枚举、列表格式和双向关系；只有网关成功返回 Proposal ID 才算进入提案。
 
 ## Verify
 
