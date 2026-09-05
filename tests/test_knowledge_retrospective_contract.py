@@ -139,16 +139,24 @@ class KnowledgeRetrospectiveContractTests(unittest.TestCase):
         self.assertNotIn("mcp__", combined)
 
     def test_manifest_exposes_both_modes_and_forensic_coverage_contract(self):
-        self.assertIn("$lab-knowledge-retrospective", self.manifest)
-        self.assertIn("short work", self.manifest)
-        self.assertIn("forensic", self.manifest.lower())
-        self.assertIn("COMPLETE", self.manifest)
-        self.assertIn("PARTIAL", self.manifest)
+        short_match = re.search(r'^  short_description: "([^"]+)"$', self.manifest, re.MULTILINE)
+        prompt_match = re.search(r'^  default_prompt: "([^"]+)"$', self.manifest, re.MULTILINE)
+        self.assertIsNotNone(short_match)
+        self.assertIsNotNone(prompt_match)
+        short_description = short_match.group(1)
+        default_prompt = prompt_match.group(1)
+
+        self.assertGreaterEqual(len(short_description), 25)
+        self.assertLessEqual(len(short_description), 64)
+        self.assertIn("短任务", short_description)
+        self.assertIn("长对话与失败项目", short_description)
+        self.assertIn("$lab-knowledge-retrospective", default_prompt)
+        self.assertIn("COMPLETE/PARTIAL", default_prompt)
         self.assertLess(
-            self.manifest.index("preflight history completeness"),
-            self.manifest.index("choosing conclusion or forensic mode"),
+            default_prompt.index("先预检历史完整性"),
+            default_prompt.index("执行逐轮法证审计"),
         )
-        self.assertIn("unknown, compacted or truncated history starts in forensic PARTIAL", self.manifest)
+        self.assertEqual(default_prompt.count("。"), 1)
 
 
 if __name__ == "__main__":
