@@ -19,6 +19,8 @@ tags (`vX.Y.Z`). Module-internal versions are noted in the entries.
   forensic reviews of failed, long or cross-task work. Forensic mode audits raw
   turns and completion claims, tracks corrections and open loops, and reports
   `COMPLETE` or `PARTIAL` coverage before distilling reusable conclusions.
+- Its UI metadata now uses a concise description and one-sentence default prompt
+  that preserve the required history-preflight order.
 
 ## [0.1.0] - 2026-08-23
 
