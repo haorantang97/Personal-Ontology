@@ -32,39 +32,75 @@ jobs:
 
   lab-ontology:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 24]
+    env:
+      VAULT_DIR: ${{ runner.temp }}/lab-ontology-vault
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
           cache: npm
           cache-dependency-path: lab-ontology/vault/ops/gateway/package-lock.json
-      - name: Vault validator on the shipped skeleton
-        working-directory: lab-ontology/vault
-        run: node ops/validate-vault.mjs
-      - name: Install gateway dependencies
-        working-directory: lab-ontology/vault/ops/gateway
-        run: npm ci
-      - name: Router unit tests
-        working-directory: lab-ontology/vault/ops/gateway
-        run: npm run test:router
-      - name: Gateway boots and lists all 13 tools (no GBrain required)
-        working-directory: lab-ontology/vault/ops/gateway
+      - name: Create an independent Git Vault fixture
         run: |
+          mkdir -p "$VAULT_DIR"
+          cp -a lab-ontology/vault/. "$VAULT_DIR/"
+          git -C "$VAULT_DIR" init
+          git -C "$VAULT_DIR" config user.name "CI Fixture"
+          git -C "$VAULT_DIR" config user.email "ci-fixture@example.invalid"
+          git -C "$VAULT_DIR" add -A
+          git -C "$VAULT_DIR" commit -m "Initialize synthetic knowledge vault"
+      - name: Install pinned gateway dependencies
+        run: npm --prefix "$VAULT_DIR/ops/gateway" ci
+      - name: Full deterministic gateway unit suite
+        run: npm --prefix "$VAULT_DIR/ops/gateway" run test:unit
+      - name: Canonical schema validation
+        run: npm --prefix "$VAULT_DIR/ops/gateway" run validate:schema
+      - name: Vault validation
+        run: node "$VAULT_DIR/ops/validate-vault.mjs"
+      - name: Gateway boots with the exact 13-tool surface
+        env:
+          AGENT_KNOWLEDGE_STATE_DIR: ${{ runner.temp }}/agent-knowledge-ci
+        run: |
+          cd "$VAULT_DIR/ops/gateway"
           node --input-type=module -e '
             import { Client } from "@modelcontextprotocol/sdk/client/index.js";
             import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-            const transport = new StdioClientTransport({ command: process.execPath, args: ["server.mjs"] });
+            const expected = [
+              "knowledge_apply_proposal",
+              "knowledge_get",
+              "knowledge_get_proposal",
+              "knowledge_intake",
+              "knowledge_list",
+              "knowledge_list_proposals",
+              "knowledge_propose_changes",
+              "knowledge_reject_proposal",
+              "knowledge_related",
+              "knowledge_repair_index",
+              "knowledge_route",
+              "knowledge_schema",
+              "knowledge_search",
+            ];
+            const transport = new StdioClientTransport({
+              command: process.execPath,
+              args: ["server.mjs"],
+              env: { ...process.env, AGENT_KNOWLEDGE_STATE_DIR: process.env.AGENT_KNOWLEDGE_STATE_DIR },
+            });
             const client = new Client({ name: "ci-probe", version: "0" });
             await client.connect(transport);
             const { tools } = await client.listTools();
             const names = tools.map((t) => t.name).sort();
             console.log(names.join("\n"));
-            if (names.length !== 13 || !names.every((n) => n.startsWith("knowledge_"))) {
-              throw new Error(`unexpected tool set: ${names.length}`);
+            if (JSON.stringify(names) !== JSON.stringify(expected)) {
+              throw new Error(`unexpected tool set: ${JSON.stringify(names)}`);
             }
             await client.close();
           '
+      - name: Generated navigation and runtime state do not dirty the Vault
+        run: test -z "$(git -C "$VAULT_DIR" status --porcelain)"
 
   lab-trust-core:
     runs-on: ubuntu-latest

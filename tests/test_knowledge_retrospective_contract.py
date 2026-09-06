@@ -126,7 +126,7 @@ class KnowledgeRetrospectiveContractTests(unittest.TestCase):
         self.assertIn("`knowledge_get`", self.skill)
         self.assertIn("`knowledge_intake`", self.skill)
         self.assertIn("对候选结论的认可不等于", self.skill)
-        self.assertIn("不要直接编辑 Vault、Git、GBrain", self.skill)
+        self.assertIn("不要直接编辑 Vault、Git、派生索引", self.skill)
 
     def test_public_module_has_no_private_or_host_local_paths(self):
         texts = []

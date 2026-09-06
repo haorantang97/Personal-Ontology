@@ -87,7 +87,7 @@ README 提供两种独立获取方式：
 | 组件 | 职责 | 是否为 `lab-trust-core` 的前置依赖 |
 | --- | --- | --- |
 | `lab-trust-core` | 对一条知识及其用途做可信度判断 | 否 |
-| `agent-knowledge` Gateway | 搜索、读取、提案、批准写入、Git 与 GBrain 同步 | 否 |
+| `agent-knowledge` Gateway | 搜索、读取、提案、批准写入、Git 与派生索引同步 | 否 |
 | `validate-vault.mjs` | 检查整个 Vault 的目录、frontmatter、日期和链接完整性 | 否 |
 
 当前 `lab-ontology` 已经使用可信度字段和 Agent 规则，但它的 `knowledge_route` 尚未调用新封装的执行代码，`validate-vault.mjs` 也只执行部分可信度约束。这意味着“可信度制度正在使用”，但“新封装代码正在运行”并不成立。
@@ -102,7 +102,7 @@ README 提供两种独立获取方式：
 
 - 作者真实 Vault 页面、Raw 或 Source 内容；
 - `/Users/...` 等个人绝对路径；
-- `~/.gbrain/change-proposals/` 中的真实提案；
+- `~/.agent-knowledge/change-proposals/` 中的真实提案；
 - 数据库、索引、凭据、密钥或个人配置；
 - 对私有知识库覆盖率审计的原始内容。
 

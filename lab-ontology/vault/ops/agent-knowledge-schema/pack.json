@@ -1,72 +1,88 @@
 {
-  "api_version": "gbrain-schema-pack-v1",
+  "api_version": "agent-knowledge-schema-pack-v1",
   "name": "agent-decision-memory",
   "version": "1.1.1",
   "description": "Agent decision memory with Raw, candidate-evidence, reusable-result, and living-project layers; module-aware retrieval; durable decisions; source-family independence; periodic audits; and approval-gated multi-agent maintenance.",
-  "author": "tanghaoran",
-  "gbrain_min_version": "0.42.0",
-  "extends": null,
-  "borrow_from": [],
+  "author": "Personal Ontology contributors",
   "page_types": [
     {
       "name": "project",
-      "primitive": "concept",
       "path_prefixes": [
         "projects/"
       ],
       "aliases": [],
-      "extractable": false,
-      "expert_routing": false
+      "retrieval_scope": "result",
+      "required_status": "active",
+      "required_fields": [
+        "related",
+        "evidence",
+        "last_confirmed"
+      ]
     },
     {
       "name": "decision",
-      "primitive": "annotation",
       "path_prefixes": [
         "decisions/"
       ],
       "aliases": [],
-      "extractable": false,
-      "expert_routing": false
+      "retrieval_scope": "result",
+      "required_status": "active",
+      "required_fields": [
+        "related",
+        "evidence"
+      ]
     },
     {
       "name": "methodology",
-      "primitive": "concept",
       "path_prefixes": [
         "methods/"
       ],
       "aliases": [],
-      "extractable": false,
-      "expert_routing": false
+      "retrieval_scope": "result",
+      "required_status": "active",
+      "required_fields": [
+        "related",
+        "evidence"
+      ]
     },
     {
       "name": "synthesis",
-      "primitive": "annotation",
       "path_prefixes": [
         "syntheses/"
       ],
       "aliases": [],
-      "extractable": false,
-      "expert_routing": false
+      "retrieval_scope": "result",
+      "required_status": "active",
+      "required_fields": [
+        "related",
+        "evidence"
+      ]
     },
     {
       "name": "concept",
-      "primitive": "concept",
       "path_prefixes": [
         "concepts/"
       ],
       "aliases": [],
-      "extractable": false,
-      "expert_routing": false
+      "retrieval_scope": "result",
+      "required_status": "active",
+      "required_fields": [
+        "related",
+        "evidence"
+      ]
     },
     {
       "name": "source",
-      "primitive": "media",
       "path_prefixes": [
         "sources/"
       ],
       "aliases": [],
-      "extractable": false,
-      "expert_routing": false
+      "retrieval_scope": "evidence",
+      "required_status": "evidence",
+      "required_fields": [
+        "derived_pages",
+        "source_format"
+      ]
     }
   ],
   "link_types": [
@@ -178,21 +194,12 @@
       "link_type": "related_to"
     }
   ],
-  "takes_kinds": [
-    "fact",
-    "take",
-    "bet",
-    "hunch"
-  ],
-  "enrichable_types": [],
-  "phases": [],
-  "calibration_domains": [],
   "filing_rules": [
     {
       "kind": "project",
       "directory": "projects/",
       "examples": [
-        "projects/timeloom"
+        "projects/example-research-project"
       ],
       "description": "Living current project truth: objectives, constraints, confirmed state, pending items, and decisions still affecting future work. May be incrementally updated by any Agent through the approval gateway; excludes task logs."
     },
@@ -208,7 +215,7 @@
       "kind": "methodology",
       "directory": "methods/",
       "examples": [
-        "methods/high-information-interview-method"
+        "methods/example-review-workflow"
       ],
       "description": "Reusable procedure an agent can execute, including inputs, steps, output contract, boundaries, failure conditions, maturity, and evidence limits."
     },
@@ -216,7 +223,7 @@
       "kind": "synthesis",
       "directory": "syntheses/",
       "examples": [
-        "syntheses/memoir-product-strategy"
+        "syntheses/example-evidence-synthesis"
       ],
       "description": "Cross-independent-source conclusion that narrows choices. Must distinguish evidence, inference, confidence, contradictions, invalid uses, and module-to-global promotion conditions."
     },
@@ -224,7 +231,7 @@
       "kind": "concept",
       "directory": "concepts/",
       "examples": [
-        "concepts/sales-listening-adaptability"
+        "concepts/example-feedback-loop"
       ],
       "description": "Stable mechanism repeatedly used in judgment and not better represented as a method, synthesis, decision, or project."
     },
@@ -232,9 +239,52 @@
       "kind": "source",
       "directory": "sources/",
       "examples": [
-        "sources/2024-06-30-douyin-he-laoshi-short-video-ip"
+        "sources/example-interview-notes"
       ],
       "description": "Curated evidence and candidate-claim pages with neutral semantic titles, provenance, source-family independence, maturity, allowed uses, evidence gaps, and optional derived results. On-demand retrieval only."
     }
-  ]
+  ],
+  "gateway_min_version": "1.8.0",
+  "inverse_only_link_types": [
+    "uses",
+    "superseded_by",
+    "required_by"
+  ],
+  "common_fields": [
+    "type",
+    "title",
+    "aliases",
+    "tags",
+    "created",
+    "updated",
+    "status",
+    "retrieval_scope",
+    "agent_priority",
+    "domain",
+    "evidence_status"
+  ],
+  "enums": {
+    "agent_priority": [
+      "high",
+      "normal",
+      "low"
+    ],
+    "maturity": [
+      "seed",
+      "corroborated",
+      "validated"
+    ],
+    "provenance_class": [
+      "first_party",
+      "external",
+      "system_observation",
+      "mixed"
+    ],
+    "decision_status": [
+      "active",
+      "superseded",
+      "reversed",
+      "expired"
+    ]
+  }
 }

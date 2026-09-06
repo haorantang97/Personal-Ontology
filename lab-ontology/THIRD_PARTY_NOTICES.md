@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-This module vendors no third-party source or binary. `vault/ops/gateway/package.json` declares two npm dependencies that `npm ci` installs into the user's environment; everything else is software supplied separately by the user.
+This module vendors no third-party source or binary. `vault/ops/gateway/package.json` and its lockfile declare the packages installed by `npm ci`; external applications remain separately supplied by the user.
 
 ## @modelcontextprotocol/sdk
 
@@ -14,21 +14,21 @@ Schema validation for tool inputs. MIT License.
 
 Repository: <https://github.com/colinhacks/zod>
 
+## Lab Trust Core
+
+The gateway pins the separately published `lab-trust-core` release archive and uses it for non-enforcing trust shadow observations after an allowed page read. MIT License.
+
+Repository: <https://github.com/haorantang97/Personal-Ontology/tree/main/lab-trust-core>
+
 ## Node.js
 
 The gateway and all `ops/*.mjs` scripts run on Node.js, distributed under the MIT License with additional component notices. Not bundled.
 
 Official license: <https://github.com/nodejs/node/blob/main/LICENSE>
 
-## GBrain (external CLI)
+## Ollama (reference external service)
 
-The derived index layer. The gateway shells out to a separately installed `gbrain` binary (`status`, `sync`, `call`, `schema validate` / `lint`). `ops/ensure-gbrain-sync-filter.mjs` inspects — and, only with `--apply`, patches — the installed GBrain import walker; review GBrain's license before applying. Not bundled.
-
-Repository: <https://github.com/garrytan/gbrain>
-
-## Ollama (external service)
-
-Local embedding service used by GBrain. `knowledge_repair_index` may start the Ollama desktop app on macOS. Not bundled.
+The Native index speaks an Ollama-compatible `/api/tags` and `/api/embed` HTTP contract. Ollama is the reference local embedding service for optional manual runtime integration checks; it is not bundled or started by this module.
 
 Official site: <https://ollama.com>
 

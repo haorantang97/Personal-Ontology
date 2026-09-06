@@ -42,7 +42,7 @@ flowchart LR
     subgraph System["lab-ontology · core system"]
         GW["agent-knowledge gateway (MCP)<br/>13 knowledge_* tools"]
         V[("Vault<br/>Markdown + Git")]
-        IX[("GBrain derived index<br/>vectors + graph")]
+        IX[("Native derived index<br/>keyword + vectors")]
     end
     CD --> KR
     LR --> KR
@@ -50,9 +50,9 @@ flowchart LR
     KI --> GW
     GW -- "commit after user approval" --> V
     V -. "rebuildable" .-> IX
-    AG["Any agent (Claude / Codex / Hermes…)"] -- "knowledge_route / search / get" --> GW
+    AG["Any MCP agent (Claude / Codex / others)"] -- "knowledge_route / search / get" --> GW
     TC["lab-trust-core · Trust Core<br/>independent SDK / CLI / read-only MCP"]
-    GW -. "optional composition; not a current runtime dependency" .-> TC
+    GW -. "non-enforcing shadow<br/>after knowledge_get" .-> TC
     EXT["Other knowledge systems / RAG / agents"] -. "use independently" .-> TC
 ```
 
@@ -70,19 +70,19 @@ Most agent-memory products are auto-writing black boxes: the model decides what 
 | Retrieval | Vector similarity injects directly | Precision-first routing: similarity only ranks candidates, never triggers a read by itself |
 | Portability | Tied to the service | Index and graph are derived layers, rebuildable from Markdown at any time |
 
-The trade-off is explicit: this is heavier than "install and forget" — it runs a local gateway and index engine, and every write needs your nod. It suits people who manage personal knowledge as a long-term asset, not those who just want chat memory.
+The trade-off is explicit: this is heavier than "install and forget" — it runs a local gateway, full semantic retrieval needs a compatible embedding service, and every write needs your nod. It suits people who manage personal knowledge as a long-term asset, not those who just want chat memory.
 
 ## Core system: `lab-ontology`
 
 [Module docs](lab-ontology/README.md) · [Architecture](lab-ontology/docs/architecture.md) · [Setup](lab-ontology/docs/setup.md)
 
-`lab-ontology` is the foundation the four skills run on. It ships three things:
+`lab-ontology` is the core system in the shared knowledge flow. The intake and retrospective Skills call it directly, while collection Skills can also produce standalone handoffs. It ships three things:
 
 - **A vault skeleton** (`lab-ontology/vault/`) you open directly in Obsidian. Knowledge is layered by *how an agent will use it later*: `.raw/` keeps recoverability and is never indexed; `sources/` holds evidence and candidate claims, retrieved on demand; `projects/ decisions/ methods/ syntheses/ concepts/` are the result layer that participates in judgment by default. The page contract lives in `ops/SCHEMA.md`, the agent rules in `ops/AGENTS.md`.
 - **An MCP gateway** (`vault/ops/gateway/`) named `agent-knowledge`, exposing 13 `knowledge_*` tools: `route` / `search` / `get` / `list` / `related` for reading, `intake` / `schema` for the contract, `propose_changes` / `list_proposals` / `get_proposal` / `apply_proposal` / `reject_proposal` for the proposal workflow, and `repair_index` for the derived index. Reading is precision-first: vector similarity ranks candidates but never triggers a read on its own.
-- **Governance tooling**: a vault validator, a graph sync that turns frontmatter links into typed edges, index-scope guards that keep governance files and Raw out of the index, and the GBrain schema pack `agent-decision-memory`.
+- **Native governance and retrieval tooling**: a commit-bound Markdown catalog, keyword/vector hybrid index, same-commit keyword fallback, typed relationships derived from frontmatter, a rebuildable human `index.md`, Vault/Schema validators, and an index-scope check. The `agent-decision-memory` schema pack lives at `ops/agent-knowledge-schema/pack.json`.
 
-It is not prompt-only: the gateway carries 30 router unit tests, and CI runs the validator, the tests and a boot probe on every push. The derived index engine (GBrain + Ollama) is an external dependency documented in setup; no personal knowledge of the author ships with the repository.
+It is not prompt-only: CI copies the skeleton into a temporary independent Git Vault, then runs the full deterministic unit suite, Schema/Vault validation and a 13-tool boot probe. Synthetic embedding tests cover Native vector, build and repair contracts; `test:smoke` verifies the same-commit keyword fallback inside a temporary synthetic Vault. Full vectors use an Ollama-compatible embedding service, while a real service is reserved for optional manual local integration checks. No personal knowledge ships with the repository.
 
 ## Trust Core: `lab-trust-core`
 
@@ -90,7 +90,7 @@ It is not prompt-only: the gateway carries 30 router unit tests, and CI runs the
 
 `lab-trust-core` receives a structured knowledge record and an intended use, returns an explainable `allow`, `review`, or `deny` verdict, and checks whether the record can advance from `seed` to `corroborated` or `validated`. It counts independent source families rather than repeated posts from the same upstream source.
 
-It is neither a second knowledge base nor a Skill: it stores, retrieves and writes nothing, requires no `lab-ontology`, and can be embedded through its SDK, CLI or read-only MCP in any knowledge base, RAG pipeline or agent. The current `lab-ontology` snapshot still applies its own schema, agent rules and partial validation and does not declare `lab-trust-core` as a runtime dependency; adapting them later is separate work and is not required to use the Trust Core.
+It is neither a second knowledge base nor a Skill: it stores, retrieves and writes nothing, requires no `lab-ontology`, and can be embedded through its SDK, CLI or read-only MCP in any knowledge base, RAG pipeline or agent. Agent Knowledge 1.8.0 pins its public release in the lockfile and calls it only as a non-enforcing shadow after `knowledge_get` passes the scope gate. It cannot block delivery, alter routing, promote maturity or approve writes. This composition does not prevent independent use.
 
 ## Skills, ordered by the flow of knowledge
 
@@ -115,8 +115,8 @@ All four are provider-neutral: Codex, Claude Code and any MCP client share the s
 
 | Component | Status | Verified by |
 | --- | --- | --- |
-| `lab-ontology` | Snapshot of a system running daily on the author's vault (gateway 1.6.0, schema pack 1.1.1) | 30 router unit tests, vault validator, gateway boot probe (CI) |
-| `lab-trust-core` | v0.1.0, independently installable Trust Core | 50 deterministic tests, Node 20/24, typecheck, build, privacy and package verification (CI) |
+| `lab-ontology` | Agent Knowledge 1.8.0 Native-only; schema pack 1.1.1; non-enforcing Trust Core shadow | Full deterministic unit suite, Schema/Vault validation and 13-tool boot probe in a temporary independent Git Vault on Node 20/24 (CI); a real vector service is only an optional manual integration check |
+| `lab-trust-core` | v0.1.2, independently installable Trust Core | 51 deterministic tests, Node 20/24, typecheck, build, privacy and package verification (CI) |
 | `lab-context-distillation-wx` | v2.0.1, verified within synthetic/public-fixture scope | 150 Python tests, bytecode compile, frozen contract SHA-256 (CI); real-device compatibility pending field validation |
 | `lab-life-reviewer` | Working workflow skill | Skill package tests (CI); no behavioral tests |
 | `lab-knowledge-retrospective` | Working retrospective-audit skill | Skill package, forensic-contract and layout tests (CI) |
@@ -150,7 +150,7 @@ Copying the complete skill directory works too. Codex, Claude Code, direct use a
 
 ## FAQ
 
-**Does it work without GBrain and Ollama?** The gateway starts, returns the contract and manages proposals, but search, routing and approved writes need them. Both are free local software; see [setup](lab-ontology/docs/setup.md).
+**Does it work without Ollama?** The gateway can boot, return contracts, read exact pages, manage proposals and use same-commit keyword fallback when Native retrieval is unavailable; responses report degraded status. Full keyword-plus-vector retrieval and index rebuilds require an Ollama-compatible embedding service. See [setup](lab-ontology/docs/setup.md).
 
 **Does my data leave my machine?** The vault, index, approval records and bundled gateway are designed to run locally; this repository publishes no personal content and CI scans for private absolute paths. Whether retrospective conversation history leaves the machine depends on the Agent host, model and privacy settings you choose. Use a local or approved host and grant only the task history needed for the review.
 

@@ -2,15 +2,15 @@
 
 ## 设计目标
 
-本库按“知识未来如何被 Agent 使用”纵向分层，按 `modules`、`domain`、`tags` 等元数据横向组织。Markdown 与 Git 是事实源；GBrain 数据库、向量和关系图是可重建的派生层。
+本库按“知识未来如何被 Agent 使用”纵向分层，按 `modules`、`domain`、`tags` 等元数据横向组织。Markdown 与 Git 是唯一事实源；Agent Knowledge Native 索引、向量和关系视图是可从指定 Git 提交重建的派生层。
 
-Schema Pack 的事实源是 `ops/gbrain-schema/pack.json`，名称为 `agent-decision-memory`。
+Schema Pack 的事实源是 `ops/agent-knowledge-schema/pack.json`，名称为 `agent-decision-memory`。
 
 ## 三层架构
 
 | 层 | 位置 | 作用 | 默认检索 |
 |---|---|---|---|
-| Raw | `.raw/` | 原始转录、录音索引、截图文字、导出和未清洗材料 | 否，不进入 GBrain |
+| Raw | `.raw/` | 原始转录、录音索引、截图文字、导出和未清洗材料 | 否，不进入检索索引 |
 | Evidence | `sources/` | 出处、可信边界、候选观点与验证状态 | 否，按需检索 |
 | Result | `projects/`、`decisions/`、`methods/`、`syntheses/`、`concepts/` | 可直接影响未来判断和行动的结果 | 是 |
 
@@ -82,7 +82,7 @@ disallowed_uses: []
 
 ## 标题与出处
 
-标题服务于语义检索，必须使用中性的知识主题。作者、平台、账号、抖音号、原始视频标题、营销措辞和采集日期放在 frontmatter 或“出处”部分，不放入结果页标题；Source 标题也不把来源身份当作主要语义。别名不得重新引入无检索价值的平台噪音。
+标题服务于语义检索，必须使用中性的知识主题。作者、平台、账号标识、原始内容标题、营销措辞和采集日期放在 frontmatter 或“出处”部分，不放入结果页标题；Source 标题也不把来源身份当作主要语义。别名不得重新引入无检索价值的平台噪音。
 
 ## Source Claim 契约
 
@@ -120,7 +120,7 @@ claim 可以独立晋升、被反证或长期停留在证据层。晋升时结�
 
 模块是覆盖在六类页面上的元数据，不新增主题文件夹，也不硬隔离：
 
-1. 先执行全局语义检索。
+1. 先执行全局检索；Native 健康时结合关键词与向量，降级时只使用同一 Git 提交上的确定性关键词召回。
 2. 再对与当前任务 `modules` 相同的结果加权。
 3. 跨模块命中仍可返回，但要说明迁移条件。
 4. Source 只在核验、探索或结果层不足时召回，并显示 maturity 与允许用途。
@@ -166,13 +166,13 @@ Project 以及其他明确维护当前状态的页面属于活页面，可以在
 内部链接，优先使用从 Vault 根目录开始的完整路径。空关系继续写成 `[]`：
 
 ```yaml
-related: ["[[projects/pronto-apparel-ai]]"]
-evidence: ["[[sources/2026-08-09-pronto-fde-final-semantic-audit]]"]
-derived_pages: ["[[methods/pronto-fde-golden-path-delivery]]"]
+related: ["[[projects/example-service-pilot]]"]
+evidence: ["[[sources/example-pilot-interviews]]"]
+derived_pages: ["[[methods/example-pilot-review-method]]"]
 ```
 
-Markdown/Git 中的内部链接是关系事实源。校验器和 GBrain 图谱同步器会把
-`[[路径]]`、别名和标题锚点规范化为页面 slug，再生成带类型的派生关系。
+Markdown/Git 中的内部链接是关系事实源。提交绑定的 `KnowledgeCatalog` 会把
+`[[路径]]`、别名和标题锚点规范化为页面 slug，并在读取时生成带类型的派生关系。
 不得在同一 Vault 中混用普通 slug 和内部链接。为允许一次性迁移，校验器只在
 全库仍为旧式普通 slug 时进入兼容模式；一旦完成全库迁移，任何重新出现的普通
 slug 都会形成混合格式并阻止写入。

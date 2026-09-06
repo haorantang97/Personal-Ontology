@@ -6,15 +6,10 @@ import {
   readFileSync,
   readdirSync,
 } from "node:fs";
-import os from "node:os";
 import path from "node:path";
+import { initializeRuntimePaths } from "./runtime-paths.mjs";
 
-const PENDING_DIR = path.join(
-  os.homedir(),
-  ".gbrain",
-  "change-proposals",
-  "pending",
-);
+const { pendingDir: PENDING_DIR } = initializeRuntimePaths();
 const ID_PATTERN = /^KB-\d{8}-\d{6}-[a-f0-9]{8}$/;
 
 function proposalHash(proposal) {
@@ -33,12 +28,16 @@ function readRecord(file) {
   return record;
 }
 
-function listPending() {
-  if (!existsSync(PENDING_DIR)) return [];
-  return readdirSync(PENDING_DIR)
+function recordsIn(directory) {
+  if (!existsSync(directory)) return [];
+  return readdirSync(directory)
     .filter((name) => name.endsWith(".json"))
     .sort()
-    .map((name) => readRecord(path.join(PENDING_DIR, name)));
+    .map((name) => readRecord(path.join(directory, name)));
+}
+
+function listPending() {
+  return recordsIn(PENDING_DIR);
 }
 
 function summarize(record) {

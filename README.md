@@ -42,7 +42,7 @@ flowchart LR
     subgraph System["lab-ontology · 核心系统"]
         GW["agent-knowledge 网关 (MCP)<br/>13 个 knowledge_* 工具"]
         V[("Vault<br/>Markdown + Git")]
-        IX[("GBrain 派生索引<br/>向量 + 图谱")]
+        IX[("Native 派生索引<br/>关键词 + 向量")]
     end
     CD --> KR
     LR --> KR
@@ -50,9 +50,9 @@ flowchart LR
     KI --> GW
     GW -- "用户批准后提交" --> V
     V -. "可重建" .-> IX
-    AG["任意 Agent（Claude / Codex / Hermes…）"] -- "knowledge_route / search / get" --> GW
+    AG["任意 MCP Agent（Claude / Codex / others）"] -- "knowledge_route / search / get" --> GW
     TC["lab-trust-core · Trust Core<br/>独立 SDK / CLI / read-only MCP"]
-    GW -. "可选组合；当前不是运行依赖" .-> TC
+    GW -. "knowledge_get 后<br/>非强制 shadow" .-> TC
     EXT["其他知识系统 / RAG / Agent"] -. "可独立调用" .-> TC
 ```
 
@@ -70,19 +70,19 @@ flowchart LR
 | 检索 | 向量相似即注入 | 精确优先路由：相似度只排序候选，永不单独触发读取 |
 | 迁移 | 与服务绑定 | 索引和图谱是派生层，可随时从 Markdown 重建 |
 
-代价也说清楚：它比"装上就有记忆"的方案重——需要本地跑网关和索引引擎，每次写入要你点头。适合把个人知识当长期资产管理的人，不适合只想要聊天记忆的场景。
+代价也说清楚：它比"装上就有记忆"的方案重——需要运行本地网关，完整语义检索还需要兼容的向量服务，每次写入也要你点头。适合把个人知识当长期资产管理的人，不适合只想要聊天记忆的场景。
 
 ## 核心系统：`lab-ontology`
 
 [打开模块文档](lab-ontology/README.md) · [架构说明](lab-ontology/docs/architecture.md) · [安装指南](lab-ontology/docs/setup.md)
 
-`lab-ontology` 是整个仓库的地基，其他四个 Skill 都运行在它之上。它包含三样东西：
+`lab-ontology` 是共享知识流的核心系统；入库与复盘 Skill 直接使用它，采集 Skill 也可以独立产出交接包。它包含三样东西：
 
 - **一个 Vault 骨架**（`lab-ontology/vault/`），可以直接用 Obsidian 打开。知识按"未来如何被 Agent 使用"分三层：`.raw/` 只保可复原、从不进索引；`sources/` 存证据与候选观点，按需检索；`projects/ decisions/ methods/ syntheses/ concepts/` 是默认参与判断的结果层。页面契约写在 `ops/SCHEMA.md`，Agent 行为规则写在 `ops/AGENTS.md`。
 - **一个 MCP 网关**（`vault/ops/gateway/`），名为 `agent-knowledge`，暴露 13 个 `knowledge_*` 工具：`route` / `search` / `get` / `list` / `related` 负责读，`intake` / `schema` 返回契约，`propose_changes` / `list_proposals` / `get_proposal` / `apply_proposal` / `reject_proposal` 负责提案与审批，`repair_index` 负责修复派生索引。读取是"精确优先"的：向量相似度只排序候选，从不单独触发读取。
-- **一套治理工具**：Vault 校验器、由 frontmatter 链接生成带类型图谱边的同步器、防止治理文件和 Raw 泄入索引的范围守卫，以及一个 GBrain schema pack（`agent-decision-memory`）。
+- **一套 Native 治理与检索工具**：Git 提交绑定的 Markdown 目录、关键词与向量混合索引、同提交关键词回退、由 frontmatter 链接生成的带类型关系、可重建的人类 `index.md`、Vault/Schema 校验器和索引范围检查。Schema pack（`agent-decision-memory`）位于 `ops/agent-knowledge-schema/pack.json`。
 
-它不是 prompt-only 的：网关有 30 个路由单测，CI 会在每次提交时跑校验器、单测和启动探针。派生索引引擎（GBrain + Ollama）是外部依赖，按 setup 文档安装；仓库里只有系统，没有作者的任何个人知识。
+它不是 prompt-only 的：CI 会把骨架复制到临时目录并初始化成独立 Git Vault，再运行完整确定性单测、Schema/Vault 校验和 13 工具启动探针。Native 向量、构建与修复协议由合成 embedding 服务测试；`test:smoke` 在临时合成 Vault 中验证同提交关键词降级链。完整向量能力使用 Ollama-compatible embedding 服务，真实服务只用于可选的人工本地集成检查。仓库里只有系统和合成 fixture，没有作者的个人知识。
 
 ## Trust Core：`lab-trust-core`
 
@@ -90,7 +90,7 @@ flowchart LR
 
 `lab-trust-core` 接收一条结构化知识记录及其预期用途，返回可解释的 `allow`、`review` 或 `deny` 判断，并检查这条知识能否从 `seed` 晋升为 `corroborated` 或 `validated`。它按独立来源家族计数，不会把同一作者反复发布误认成交叉验证。
 
-它不是第二套知识库，也不是 Skill：不保存、不搜索、不写入知识，不依赖 `lab-ontology`，可以通过 SDK、CLI 或只读 MCP 单独嵌入任意知识库、RAG 或 Agent。当前发布的 `lab-ontology` 快照仍执行自身的 Schema、Agent 规则和部分校验，并未把 `lab-trust-core` 设为运行依赖；二者是否适配是后续独立工作，不影响 Trust Core 单独使用。
+它不是第二套知识库，也不是 Skill：不保存、不搜索、不写入知识，不依赖 `lab-ontology`，可以通过 SDK、CLI 或只读 MCP 单独嵌入任意知识库、RAG 或 Agent。Agent Knowledge 1.8.0 已通过 lockfile 固定其公开 release，但只在 `knowledge_get` 通过 scope gate 后做非强制 shadow 观测；它不会阻断读取、改变路由、升级成熟度或批准写入。这个组合不影响 Trust Core 单独使用。
 
 ## Skills（按知识流向排序）
 
@@ -113,14 +113,14 @@ flowchart LR
 
 ## 一次完整的流转
 
-以一次人生回顾为例：`lab-life-reviewer` 在采访任务里记录一段职业经历，生成 Raw 和 handoff；归档任务读取它们，调用 `lab-knowledge-retrospective` 把叙事里能跨时间成立的结论挑出来——也许只有一条，也许没有；有结论时交给 `lab-knowledge-intake`，它先读取当前 Schema 和目标页面、检索同义知识，再预检完整目标文件的字段、列表格式与双向关系，生成一份提案：新建一张 `source` 页记录出处与候选观点，或更新一张既有的 `project` 页。你看到的是原文级别的改动，批准后网关再次在临时工作树里跑校验，只提交这几个文件，同步 GBrain 索引并重建图谱边。从此任何 Agent 在相关任务开始时，都能通过 `knowledge_route` 读到这条结论，并看到它是 `seed` 还是已被多个独立来源 `corroborated`。
+以一次人生回顾为例：`lab-life-reviewer` 在采访任务里记录一段职业经历，生成 Raw 和 handoff；归档任务读取它们，调用 `lab-knowledge-retrospective` 把叙事里能跨时间成立的结论挑出来——也许只有一条，也许没有；有结论时交给 `lab-knowledge-intake`，它先读取当前 Schema 和目标页面、检索同义知识，再预检完整目标文件的字段、列表格式与双向关系，生成一份提案：新建一张 `source` 页记录出处与候选观点，或更新一张既有的 `project` 页。你看到的是原文级别的改动，批准后网关在隔离候选树里校验，只提交获批文件，并把 Native 索引同步到同一 Git 提交。从此任何 Agent 在相关任务开始时，都能通过 `knowledge_route` 读到这条结论，并看到它是 `seed` 还是已被多个独立来源 `corroborated`。
 
 ## 状态
 
 | 组件 | 状态 | 验证方式 |
 | --- | --- | --- |
-| `lab-ontology` | 作者 Vault 上每日运行的系统快照（网关 1.6.0，schema pack 1.1.1） | 30 个路由单测、Vault 校验器、网关启动探针（CI） |
-| `lab-trust-core` | v0.1.0，可独立安装的 Trust Core | 50 个确定性测试、Node 20/24、类型检查、构建、隐私扫描与打包预检（CI） |
+| `lab-ontology` | Agent Knowledge 1.8.0 Native-only；schema pack 1.1.1；Trust Core shadow 非强制 | Node 20/24 下临时独立 Git Vault 中的完整确定性单测、Schema/Vault 校验、13 工具启动探针（CI）；真实向量服务仅用于可选人工集成检查 |
+| `lab-trust-core` | v0.1.2，可独立安装的 Trust Core | 51 个确定性测试、Node 20/24、类型检查、构建、隐私扫描与打包预检（CI） |
 | `lab-context-distillation-wx` | v2.0.1，合成/公开 fixture 范围内验证 | 150 个 Python 测试、字节码编译、冻结契约 SHA-256（CI）；真机兼容待现场验证 |
 | `lab-life-reviewer` | 可用的工作流 Skill | Skill 包结构测试（CI）；无行为测试 |
 | `lab-knowledge-retrospective` | 可用的复盘审计 Skill | Skill 包结构、法证协议契约与布局测试（CI） |
@@ -186,7 +186,7 @@ Personal-Ontology/
 
 ## FAQ
 
-**没有 GBrain 和 Ollama 能用吗？** 网关能启动、能返回契约、能建提案，但检索、路由和批准落盘需要它们。它们都是本地免费软件，装法见 [setup](lab-ontology/docs/setup.md)。
+**没有 Ollama 能用吗？** 可以启动网关、读取精确页面与契约、管理提案，并在 Native 索引不可用时使用同一 Git 提交上的关键词回退；响应会标成降级。完整关键词+向量混合检索和索引重建需要 Ollama-compatible embedding 服务，参考配置见 [setup](lab-ontology/docs/setup.md)。
 
 **我的数据会离开我的电脑吗？** Vault、索引、审批记录和本仓库提供的网关按本地运行设计；本仓库不发布个人内容，并在 CI 中扫描私人绝对路径。复盘时对话历史是否离开本机，取决于你选择的 Agent 宿主、模型和隐私设置；应使用本地或已获批准的宿主，并只授予完成复盘所需的任务历史。
 
@@ -194,7 +194,7 @@ Personal-Ontology/
 
 **为什么大多数 Skill 仍然很薄？** Schema、知识路由和写入审批规则由网关的当前契约返回，所以采集与入库 Skill 主要负责把 Agent 引到正确入口。`lab-knowledge-retrospective` 是例外之一：它把模式选择、逐轮账本、声明核验和覆盖门作为稳定执行协议随 Skill 发布；具体领域方法与 Schema 仍留在知识库和网关中演进。
 
-**可以商用吗？** 个人与非商业用途自由使用；商业用途需要书面授权，见 [License](#license)。
+**可以商用吗？** `lab-trust-core/` 采用 MIT License，可以按该许可证商用。仓库其余部分允许个人与非商业用途；商业使用需要书面授权，见 [License](#license)。
 
 ## License
 
@@ -208,9 +208,9 @@ Personal-Ontology/
 
 Personal-Ontology is an original workbench for letting AI agents maintain knowledge *about you* over the long run — traceably, and only with your approval. It consists of one complete system, one standalone Trust Core, and four Skills.
 
-**`lab-ontology`** is the foundation: a schema-governed Obsidian vault skeleton (Markdown + Git as the only source of truth), an MCP gateway named `agent-knowledge` that exposes 13 `knowledge_*` tools for precision-first reading and proposal-gated writing, and the validators, graph sync and index guards around them. Vectors and graph edges live in a rebuildable derived layer (GBrain + Ollama).
+**`lab-ontology`** is the foundation: a schema-governed Obsidian vault skeleton (Markdown + Git as the only source of truth), an MCP gateway named `agent-knowledge` that exposes 13 `knowledge_*` tools for precision-first reading and proposal-gated writing, and Agent Knowledge 1.8.0's Native hybrid index. Its vectors, typed relationships and human navigation index are rebuildable; unhealthy Native retrieval visibly falls back to keyword recall over the same Git commit. Full vector search uses an Ollama-compatible embedding service.
 
-**`lab-trust-core`** is an independent MIT-licensed policy core. Given a knowledge record and an intended use, its SDK, CLI or read-only MCP returns an explainable trust verdict and promotion check. It stores and retrieves nothing and does not require `lab-ontology`.
+**`lab-trust-core`** is an independent MIT-licensed policy core. Given a knowledge record and an intended use, its SDK, CLI or read-only MCP returns an explainable trust verdict and promotion check. It stores and retrieves nothing and does not require `lab-ontology`. Agent Knowledge 1.8.0 pins it for a non-enforcing post-read shadow diagnostic; that shadow never blocks delivery or authorizes writes.
 
 The skills follow the flow of knowledge. **`lab-context-distillation-wx`** extracts an evidence-bounded personal operating model from existing records (WeChat 4.x exports) with a deterministic local pipeline; **`lab-life-reviewer`** collects what records never captured through interview-led life review; **`lab-knowledge-retrospective`** audits finished, paused or failed work in conclusion or forensic mode, reports raw-turn and completion-claim coverage as `COMPLETE/PARTIAL`, then decides what deserves to survive with evidence and sample size attached; **`lab-knowledge-intake`** is the single entry point that turns anything worth keeping into an exact proposal and waits for approval.
 
