@@ -1,52 +1,131 @@
 #!/usr/bin/env node
 
-import path from "node:path";
-import os from "node:os";
-import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import {
+  cpSync,
   existsSync,
+  mkdirSync,
+  mkdtempSync,
   readFileSync,
-  unlinkSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { execFileSync } from "node:child_process";
+import os from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(HERE, "../..");
-const resultDirectories = new Set([
-  "projects",
-  "decisions",
-  "methods",
-  "syntheses",
-  "concepts",
-]);
-const expectedResultCount = execFileSync(
-  "git",
-  ["ls-tree", "-r", "--name-only", "HEAD"],
-  { cwd: ROOT, encoding: "utf8" },
-)
-  .split("\n")
-  .filter((name) => {
-    const [directory] = name.split("/");
-    return resultDirectories.has(directory) && name.endsWith(".md");
-  }).length;
-const transport = new StdioClientTransport({
-  command: process.execPath,
-  args: [path.join(HERE, "server.mjs")],
-});
-const client = new Client({
-  name: "agent-knowledge-gateway-smoke-test",
-  version: "1.6.0",
-});
-let smokeProposalFile;
-let smokeRejectedFile;
-let staleProposalFile;
-let staleRejectedFile;
-let uiProposalFile;
-let uiRejectedFile;
+const SOURCE_VAULT = path.resolve(HERE, "../..");
+const SMOKE_ROOT = mkdtempSync(path.join(os.tmpdir(), "agent-knowledge-smoke-"));
+const FIXTURE_ROOT = path.join(SMOKE_ROOT, "vault");
+const FIXTURE_GATEWAY = path.join(FIXTURE_ROOT, "ops/gateway");
+const STATE_ROOT = path.join(SMOKE_ROOT, "state");
+const PROPOSAL_ROOT = path.join(STATE_ROOT, "proposals");
+const METHOD_SLUG = "methods/greenhouse-watering-checklist";
+const METHOD_PATH = `${METHOD_SLUG}.md`;
+const SOURCE_SLUG = "sources/greenhouse-observation";
+
+const page = ({ type, title, status, scope, extra = "", body }) => `---
+type: ${type}
+title: ${title}
+aliases: []
+tags: [synthetic-fixture]
+created: 2026-01-01
+updated: 2026-01-01
+status: ${status}
+retrieval_scope: ${scope}
+agent_priority: normal
+domain: synthetic-example
+evidence_status: synthetic
+owner: fixture
+modules: []
+${extra}---
+# ${title}
+
+${body}
+`;
+
+function copyFixtureVault() {
+  cpSync(SOURCE_VAULT, FIXTURE_ROOT, {
+    recursive: true,
+    filter(source) {
+      const relative = path.relative(SOURCE_VAULT, source);
+      return !relative.split(path.sep).includes("node_modules")
+        && relative !== "index.md";
+    },
+  });
+  symlinkSync(path.join(HERE, "node_modules"), path.join(FIXTURE_GATEWAY, "node_modules"), "dir");
+  const write = (relative, content) => {
+    const absolute = path.join(FIXTURE_ROOT, relative);
+    mkdirSync(path.dirname(absolute), { recursive: true });
+    writeFileSync(absolute, content);
+  };
+  write(METHOD_PATH, page({
+    type: "methodology",
+    title: "温室浇水检查清单",
+    status: "active",
+    scope: "result",
+    extra: "related: [\"[[concepts/example-feedback-loop]]\"]\nevidence: []\nmaturity: seed\n",
+    body: "按土壤湿度、天气与植物阶段安排浇水。",
+  }));
+  write("concepts/example-feedback-loop.md", page({
+    type: "concept",
+    title: "示例反馈循环",
+    status: "active",
+    scope: "result",
+    extra: `related: [\"[[${METHOD_SLUG}]]\"]\nevidence: []\nmaturity: seed\n`,
+    body: "执行、观察、调整，再进入下一轮。",
+  }));
+  write(`${SOURCE_SLUG}.md`, page({
+    type: "source",
+    title: "温室观察记录",
+    status: "evidence",
+    scope: "evidence",
+    extra: "derived_pages: []\nsource_format: synthetic\nsource_family: synthetic-fixture\nprovenance_class: external\nmaturity: seed\nraw_refs: []\nallowed_uses: [experiment_hypothesis]\ndisallowed_uses: [default_answer, operational_decision, public_factual_claim]\nscope: [greenhouse observation]\nfailure_conditions: [no direct observation]\n",
+    body: `这是一条仅用于公开测试的合成观察。
+
+## Claims
+
+### C-01
+
+- 陈述：土壤湿度可以作为浇水实验的一个观察变量。
+- 类型：待验证假设
+- 直接依据：
+  - synthetic-observation-1
+- 样本量：1
+- 利益关系：无商业利益关系。
+- 允许用途：
+  - experiment_hypothesis
+- 禁止用途：
+  - default_answer
+  - operational_decision
+  - public_factual_claim
+- 反证： []
+- 证据缺口：
+  - 尚无重复观察
+- 适用范围：
+  - greenhouse observation
+- 失效条件：
+  - no direct observation
+- 下一步验证：
+  - 在独立温室中重复观察`,
+  }));
+  const git = (...args) => execFileSync("git", args, {
+    cwd: FIXTURE_ROOT,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
+  git("init", "-q");
+  git("config", "user.name", "Smoke Fixture");
+  git("config", "user.email", "smoke@example.invalid");
+  git("add", ".");
+  git("commit", "-qm", "synthetic fixture");
+  return git("rev-parse", "HEAD");
+}
 
 function payload(toolResult) {
   const text = toolResult.content?.find((item) => item.type === "text")?.text;
@@ -54,495 +133,200 @@ function payload(toolResult) {
   return JSON.parse(text);
 }
 
-// Search cases are vault-specific: each entry is [query, expected result slug].
-// They live in smoke-cases.json next to this file (override with SMOKE_CASES=<path>)
-// so the test can be pointed at any populated vault without editing code.
-const casesPath = process.env.SMOKE_CASES
-  ? path.resolve(process.env.SMOKE_CASES)
-  : path.join(HERE, "smoke-cases.json");
-const cases = JSON.parse(readFileSync(casesPath, "utf8"));
-if (!Array.isArray(cases) || cases.some((entry) => !Array.isArray(entry) || entry.length !== 2)) {
-  throw new Error(`${casesPath} must be a JSON array of [query, expectedSlug] pairs.`);
+function proposalStatePath(state, proposalId) {
+  return path.join(PROPOSAL_ROOT, state, `${proposalId}.json`);
 }
 
+const requiredTools = [
+  "knowledge_intake",
+  "knowledge_route",
+  "knowledge_search",
+  "knowledge_get",
+  "knowledge_list",
+  "knowledge_related",
+  "knowledge_schema",
+  "knowledge_repair_index",
+  "knowledge_propose_changes",
+  "knowledge_list_proposals",
+  "knowledge_get_proposal",
+  "knowledge_reject_proposal",
+  "knowledge_apply_proposal",
+].sort();
+
+let client;
 try {
+  const currentCommit = copyFixtureVault();
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [path.join(FIXTURE_GATEWAY, "server.mjs")],
+    env: { ...process.env, AGENT_KNOWLEDGE_STATE_DIR: STATE_ROOT },
+  });
+  client = new Client({ name: "agent-knowledge-gateway-smoke-test", version: "1.8.0" });
   await client.connect(transport);
-  const listedTools = await client.listTools();
-  const requiredTools = [
-    "knowledge_intake",
-    "knowledge_route",
-    "knowledge_search",
-    "knowledge_get",
-    "knowledge_list",
-    "knowledge_related",
-    "knowledge_schema",
-    "knowledge_repair_index",
-    "knowledge_propose_changes",
-    "knowledge_list_proposals",
-    "knowledge_get_proposal",
-    "knowledge_reject_proposal",
-    "knowledge_apply_proposal",
-  ];
-  for (const name of requiredTools) {
-    if (!listedTools.tools.some((tool) => tool.name === name)) {
-      throw new Error(`Missing MCP tool: ${name}`);
-    }
+
+  const listed = await client.listTools();
+  const actualTools = listed.tools.map(({ name }) => name).sort();
+  assertEqual(actualTools, requiredTools, "Gateway tool surface changed");
+
+  const intake = payload(await client.callTool({
+    name: "knowledge_intake",
+    arguments: { user_request: "保存一条合成知识" },
+  }));
+  if (intake.destination?.vault_path !== realpathSync(FIXTURE_ROOT)
+    || !intake.next_step?.includes("knowledge_propose_changes")) {
+    throw new Error(`Knowledge intake did not return the active proposal contract: ${JSON.stringify(intake)}`);
   }
 
-  const intake = payload(
-    await client.callTool({
-      name: "knowledge_intake",
-      arguments: { user_request: "把这个附件录入知识库" },
-    }),
-  );
-  if (
-    intake.destination?.application !== "Obsidian"
-    || intake.destination?.vault_path !== path.resolve(HERE, "../..")
-    || !intake.schema_contract?.includes("## 页面类型")
-    || !intake.agent_rules?.includes("## 2. 写入审批")
-    || !intake.next_step?.includes("knowledge_propose_changes")
-  ) {
-    throw new Error("Knowledge intake did not return the complete active contract.");
+  const schema = payload(await client.callTool({ name: "knowledge_schema", arguments: {} }));
+  if (schema.source_commit !== currentCommit
+    || schema.gateway_runtime?.version !== "1.8.0"
+    || schema.retrieval_status?.policy?.active_backend !== "native"
+    || schema.retrieval_status?.policy?.fallback_backend !== "local_markdown_keyword"
+    || schema.gateway_runtime?.trust_core?.mode !== "shadow"
+    || schema.gateway_runtime?.trust_core?.enforced !== false
+    || schema.navigation_index?.status !== "ready"
+    || schema.navigation_index?.page_count !== 3) {
+    throw new Error(`Unexpected runtime contract: ${JSON.stringify(schema)}`);
   }
 
-  const currentCommit = execFileSync("git", ["rev-parse", "HEAD"], {
-    cwd: ROOT,
-    encoding: "utf8",
-  }).trim();
-  const indexRepair = payload(
-    await client.callTool({
-      name: "knowledge_repair_index",
-      arguments: { force_full: false },
-    }, undefined, { timeout: 900_000 }),
-  );
-  if (
-    indexRepair.knowledge_modified !== false
-    || indexRepair.git_modified !== false
-    || indexRepair.index_commit !== currentCommit
-    || indexRepair.unembedded_chunks !== 0
-  ) {
-    throw new Error("Index repair did not verify the current Git-backed index.");
+  const search = payload(await client.callTool({
+    name: "knowledge_search",
+    arguments: { query: "温室浇水", scope: "result", limit: 5 },
+  }));
+  if (search.retrieval?.served_by !== "local_markdown_keyword"
+    || search.retrieval?.expected_git_commit !== currentCommit
+    || search.retrieval?.fallback_chain?.[0]?.backend !== "native"
+    || search.results?.[0]?.slug !== METHOD_SLUG
+    || search.results.some(({ type }) => type === "source")) {
+    throw new Error(`Same-commit Markdown fallback failed: ${JSON.stringify(search)}`);
   }
 
-  const evaluations = [];
-  for (const [query, expected] of cases) {
-    const response = await client.callTool({
-      name: "knowledge_search",
-      arguments: { query, scope: "result", limit: 5 },
-    });
-    if (response.isError) throw new Error(`Search failed: ${query}`);
-    const data = payload(response);
-    if (data.results.some((item) => item.type === "source")) {
-      throw new Error(`Default result scope leaked a source page: ${query}`);
-    }
-    const rank = data.results.findIndex((item) => item.slug === expected) + 1;
-    if (rank < 1 || rank > 3) {
-      throw new Error(`Expected '${expected}' in top 3 for '${query}', got rank ${rank || "none"}.`);
-    }
-    evaluations.push({ query, expected, rank, top: data.results[0]?.slug });
-  }
-
-  const routeGitBefore = execFileSync("git", ["status", "--porcelain=v1"], {
-    cwd: ROOT,
-    encoding: "utf8",
-  });
-  const routeEvaluations = [];
-  const routeCases = [
-    {
-      query: "推荐上海适合生日聚餐的餐厅",
-      expected: [
-        "methods/shanghai-restaurant-scenario-index-model",
-        "syntheses/urban-restaurant-decision-system",
-      ],
-    },
-    {
-      query: "Hermes 的 Dashboard 应该负责什么，运行时应该放在哪里",
-      expected: ["projects/hermes-agent-workbench"],
-    },
-    {
-      query: "根据我的经历帮我写一份简历",
-      expected: ["projects/career-experience-evidence-ledger"],
-    },
-  ];
-  for (const routeCase of routeCases) {
-    const routed = payload(await client.callTool({
-      name: "knowledge_route",
-      arguments: { query: routeCase.query, limit: 5 },
-    }, undefined, { timeout: 300_000 }));
-    const selectedSlugs = routed.selected?.map((item) => item.slug) || [];
-    if (
-      routed.action !== "read"
-      || !routeCase.expected.some((slug) => selectedSlugs.includes(slug))
-      || !/^kr-[a-f0-9]{16}$/.test(routed.trace_id || "")
-    ) {
-      throw new Error(
-        `Knowledge route missed '${routeCase.query}': ${JSON.stringify(routed)}`,
-      );
-    }
-    if ([...(routed.selected || []), ...(routed.candidates || [])]
-      .some((item) => item.type === "source" || item.slug?.startsWith("sources/"))) {
-      throw new Error(`Knowledge route leaked evidence scope: ${routeCase.query}`);
-    }
-    routeEvaluations.push({
-      query: routeCase.query,
-      action: routed.action,
-      selected: selectedSlugs,
-      retrieval: routed.retrieval,
-    });
-  }
-
-  const negativeRouteQueries = [
-    "2+2 等于多少？",
-    "把这句话翻译成英文。",
-    "写一个邮箱正则表达式。",
-    "上海明天天气怎么样？",
-    "解释 QCD 渐近自由。",
-    "今天美元兑人民币汇率是多少",
-    "如何判断销售候选人的能力",
-  ];
-  for (const query of negativeRouteQueries) {
-    const routed = payload(await client.callTool({
-      name: "knowledge_route",
-      arguments: { query, limit: 5 },
-    }, undefined, { timeout: 300_000 }));
-    if (routed.action === "read") {
-      throw new Error(`Negative route produced an automatic read for '${query}': ${JSON.stringify(routed)}`);
-    }
-    routeEvaluations.push({
-      query,
-      action: routed.action,
-      selected: routed.selected?.map((item) => item.slug) || [],
-      retrieval: routed.retrieval,
-    });
-  }
-  const routeGitAfter = execFileSync("git", ["status", "--porcelain=v1"], {
-    cwd: ROOT,
-    encoding: "utf8",
-  });
-  if (routeGitAfter !== routeGitBefore) {
-    throw new Error("knowledge_route changed the Git worktree.");
-  }
-
-  const resultList = payload(
-    await client.callTool({
-      name: "knowledge_list",
-      arguments: { scope: "result", limit: 100 },
-    }),
-  );
-  if (
-    resultList.pages.length !== expectedResultCount
-    || resultList.pages.some((page) => page.type === "source")
-  ) {
-    throw new Error(
-      `Result list must contain all ${expectedResultCount} current non-source pages.`,
-    );
+  const routed = payload(await client.callTool({
+    name: "knowledge_route",
+    arguments: { query: "请使用温室浇水检查清单", limit: 5 },
+  }));
+  if (routed.action !== "read" || routed.selected?.[0]?.slug !== METHOD_SLUG) {
+    throw new Error(`Exact-title route failed: ${JSON.stringify(routed)}`);
   }
 
   const blockedSource = await client.callTool({
     name: "knowledge_get",
-    arguments: {
-      slug: "sources/2024-06-30-douyin-he-laoshi-short-video-ip",
-      scope: "result",
-    },
+    arguments: { slug: SOURCE_SLUG, scope: "result" },
   });
-  if (!blockedSource.isError) throw new Error("Result scope did not block a source page.");
+  if (!blockedSource.isError) throw new Error("Result scope did not block an evidence page.");
 
-  const schema = payload(
-    await client.callTool({ name: "knowledge_schema", arguments: {} }),
-  );
-  if (schema.active_pack.pack_name !== "agent-decision-memory") {
-    throw new Error("Unexpected active schema pack.");
-  }
-  if (
-    schema.gateway_runtime?.version !== "1.6.0"
-    || schema.gateway_runtime?.target_scoped_apply !== true
-    || schema.gateway_runtime?.clean_worktree_validation_and_indexing !== true
-  ) {
-    throw new Error("Gateway did not report the target-scoped apply runtime.");
+  const read = payload(await client.callTool({
+    name: "knowledge_get",
+    arguments: { slug: METHOD_SLUG, scope: "result" },
+  }));
+  if (read.page?.slug !== METHOD_SLUG) {
+    throw new Error(`Committed result read failed: ${JSON.stringify(read)}`);
   }
 
-  const moduleSearch = payload(
-    await client.callTool({
-      name: "knowledge_search",
-      arguments: { query: "企业 AI 交付", scope: "result", module: "fde", limit: 5 },
-    }, undefined, { timeout: 300_000 }),
-  );
-  if (moduleSearch.module !== "fde" || !Array.isArray(moduleSearch.results)) {
-    throw new Error("Module-aware global search did not accept the module hint.");
+  const trustRead = payload(await client.callTool({
+    name: "knowledge_get",
+    arguments: {
+      slug: SOURCE_SLUG,
+      scope: "evidence",
+      trust_context: {
+        intended_use: "default_answer",
+        risk_level: "ordinary",
+        claim_id: "C-01",
+        scope: ["greenhouse observation"],
+      },
+    },
+  }));
+  if (trustRead.page?.slug !== SOURCE_SLUG
+    || trustRead.trust_shadow?.mode !== "shadow"
+    || trustRead.trust_shadow?.enforced !== false
+    || trustRead.trust_shadow?.status !== "evaluated"
+    || trustRead.trust_shadow?.engine?.policy_id !== "knowledge-trust-default"
+    || trustRead.trust_shadow?.verdict?.decision !== "deny") {
+    throw new Error(`TrustCore shadow contract failed: ${JSON.stringify(trustRead)}`);
   }
 
-  const proposalResponse = await client.callTool({
+  const list = payload(await client.callTool({
+    name: "knowledge_list",
+    arguments: { scope: "result", limit: 100 },
+  }));
+  if (list.pages?.length !== 2 || list.pages.some(({ type }) => type === "source")) {
+    throw new Error("Result listing did not preserve scope isolation.");
+  }
+
+  const methodBytes = readFileSync(path.join(FIXTURE_ROOT, METHOD_PATH), "utf8");
+  const proposed = payload(await client.callTool({
     name: "knowledge_propose_changes",
     arguments: {
-      summary: "Gateway smoke-test proposal",
-      rationale: "Verify that proposals are queued without changing the knowledge repository.",
+      summary: "Synthetic smoke proposal",
+      rationale: "Verify exact proposals without changing the fixture repository.",
       origin: "background",
       proposed_by: "gateway-smoke-test",
-      context: "Automated approval-inbox verification.",
-      changes: [
-        {
-          action: "update",
-          target: "methods/short-video-user-judgment-model.md",
-          content: readFileSync(
-            path.resolve(HERE, "../../methods/short-video-user-judgment-model.md"),
-            "utf8",
-          ),
-        },
-      ],
+      changes: [{ action: "update", target: METHOD_PATH, content: methodBytes }],
     },
-  });
-  if (proposalResponse.isError) throw new Error("Proposal creation failed.");
-  const proposal = payload(proposalResponse);
-  if (proposal.knowledge_modified !== false) {
-    throw new Error("Proposal creation unexpectedly modified knowledge.");
+  }));
+  const pendingPath = proposalStatePath("pending", proposed.proposal_id);
+  if (proposed.knowledge_modified !== false || !existsSync(pendingPath)) {
+    throw new Error("Proposal creation changed knowledge or did not persist the proposal.");
   }
-  smokeProposalFile = path.join(
-    os.homedir(),
-    ".gbrain",
-    "change-proposals",
-    "pending",
-    `${proposal.proposal_id}.json`,
-  );
-  if (!existsSync(smokeProposalFile)) throw new Error("Pending proposal file was not created.");
-
-  const uiArtifact = "未命名.canvas";
-  if (existsSync(path.join(ROOT, uiArtifact))) {
-    const uiResponse = payload(
-      await client.callTool({
-        name: "knowledge_propose_changes",
-        arguments: {
-          summary: "Gateway UI-artifact deletion smoke test",
-          rationale: "Verify that an exact proposal may target a root Obsidian Canvas for deletion.",
-          origin: "background",
-          proposed_by: "gateway-smoke-test",
-          changes: [{ action: "delete", target: uiArtifact }],
-        },
-      }),
-    );
-    uiProposalFile = path.join(
-      os.homedir(),
-      ".gbrain",
-      "change-proposals",
-      "pending",
-      `${uiResponse.proposal_id}.json`,
-    );
-    if (!existsSync(uiProposalFile)) {
-      throw new Error("Root Obsidian UI-artifact proposal was not created.");
-    }
-    const uiRejected = payload(
-      await client.callTool({
-        name: "knowledge_reject_proposal",
-        arguments: {
-          proposal_id: uiResponse.proposal_id,
-          user_rejected: true,
-          rejection_message: "Smoke-test cleanup; the real deletion remains separately approval-gated.",
-        },
-      }),
-    );
-    if (!uiRejected.rejected || existsSync(uiProposalFile)) {
-      throw new Error("Root Obsidian UI-artifact proposal cleanup failed.");
-    }
-    uiProposalFile = undefined;
-    uiRejectedFile = path.join(
-      os.homedir(),
-      ".gbrain",
-      "change-proposals",
-      "rejected",
-      `${uiResponse.proposal_id}.json`,
-    );
-    unlinkSync(uiRejectedFile);
-    uiRejectedFile = undefined;
+  const exact = payload(await client.callTool({
+    name: "knowledge_get_proposal",
+    arguments: { proposal_id: proposed.proposal_id },
+  }));
+  if (exact.proposal?.changes?.[0]?.content !== methodBytes
+    || exact.proposal?.preconditions?.[METHOD_PATH]?.exists !== true) {
+    throw new Error("Exact proposal review lost content or its committed baseline.");
   }
-  const pending = payload(
-    await client.callTool({ name: "knowledge_list_proposals", arguments: {} }),
-  );
-  const listedProposal = pending.proposals.find((item) => item.id === proposal.proposal_id);
-  if (!listedProposal || listedProposal.origin !== "background") {
-    throw new Error("Pending proposal was not listed.");
-  }
-  const exact = payload(
-    await client.callTool({
-      name: "knowledge_get_proposal",
-      arguments: { proposal_id: proposal.proposal_id },
-    }),
-  );
-  if (
-    exact.proposal.proposed_by !== "gateway-smoke-test"
-    || !exact.proposal.changes[0]?.content
-  ) {
-    throw new Error("Exact proposal review did not return the full proposal.");
-  }
-  const expectedBaseline =
-    exact.proposal.preconditions?.["methods/short-video-user-judgment-model.md"];
-  if (
-    !exact.proposal.base_commit
-    || expectedBaseline?.exists !== true
-    || !/^[a-f0-9]{64}$/.test(expectedBaseline.sha256 || "")
-  ) {
-    throw new Error("Proposal did not capture a valid content baseline.");
-  }
-  const digest = JSON.parse(
-    execFileSync(
-      process.execPath,
-      [path.join(HERE, "proposal-digest.mjs"), "--json"],
-      { encoding: "utf8" },
-    ),
-  );
-  if (!digest.proposals.some((item) => item.id === proposal.proposal_id)) {
-    throw new Error("Proposal digest did not include the pending proposal.");
-  }
-
   const blockedApply = await client.callTool({
     name: "knowledge_apply_proposal",
-    arguments: { proposal_id: proposal.proposal_id },
+    arguments: { proposal_id: proposed.proposal_id },
   });
-  if (!blockedApply.isError) {
-    throw new Error("Apply accepted a proposal without conversation approval.");
+  if (!blockedApply.isError || !existsSync(pendingPath)) {
+    throw new Error("Apply gate accepted a proposal without explicit approval.");
   }
-  if (!existsSync(smokeProposalFile)) {
-    throw new Error("Rejected apply removed the pending proposal.");
-  }
-
-  const blockedReject = await client.callTool({
+  const rejected = payload(await client.callTool({
     name: "knowledge_reject_proposal",
-    arguments: { proposal_id: proposal.proposal_id },
-  });
-  if (!blockedReject.isError || !existsSync(smokeProposalFile)) {
-    throw new Error("Reject accepted a proposal without explicit user rejection.");
-  }
-  const rejected = payload(
-    await client.callTool({
-      name: "knowledge_reject_proposal",
-      arguments: {
-        proposal_id: proposal.proposal_id,
-        user_rejected: true,
-        rejection_message: "Smoke-test cleanup; no knowledge change was requested.",
-      },
-    }),
-  );
-  if (rejected.knowledge_modified !== false || existsSync(smokeProposalFile)) {
-    throw new Error("Proposal rejection did not archive the proposal safely.");
-  }
-  smokeRejectedFile = path.join(
-    os.homedir(),
-    ".gbrain",
-    "change-proposals",
-    "rejected",
-    `${proposal.proposal_id}.json`,
-  );
-  if (!existsSync(smokeRejectedFile)) throw new Error("Rejected proposal was not archived.");
-  unlinkSync(smokeRejectedFile);
-  smokeRejectedFile = undefined;
-
-  const staleResponse = await client.callTool({
-    name: "knowledge_propose_changes",
     arguments: {
-      summary: "Gateway stale-proposal smoke test",
-      rationale: "Verify that a changed content baseline blocks an approved proposal.",
-      origin: "background",
-      proposed_by: "gateway-smoke-test",
-      changes: [
-        {
-          action: "update",
-          target: "methods/short-video-user-judgment-model.md",
-          content: readFileSync(
-            path.resolve(HERE, "../../methods/short-video-user-judgment-model.md"),
-            "utf8",
-          ),
-        },
-      ],
+      proposal_id: proposed.proposal_id,
+      user_rejected: true,
+      rejection_message: "Synthetic smoke cleanup.",
     },
-  });
-  if (staleResponse.isError) throw new Error("Stale-proposal setup failed.");
-  const staleProposal = payload(staleResponse);
-  staleProposalFile = path.join(
-    os.homedir(),
-    ".gbrain",
-    "change-proposals",
-    "pending",
-    `${staleProposal.proposal_id}.json`,
-  );
-  const staleRecord = JSON.parse(readFileSync(staleProposalFile, "utf8"));
-  staleRecord.proposal.preconditions[
-    "methods/short-video-user-judgment-model.md"
-  ].sha256 = "0".repeat(64);
-  staleRecord.sha256 = createHash("sha256")
-    .update(JSON.stringify(staleRecord.proposal))
-    .digest("hex");
-  writeFileSync(staleProposalFile, `${JSON.stringify(staleRecord, null, 2)}\n`, {
-    mode: 0o600,
-  });
+  }));
+  if (!rejected.rejected || rejected.knowledge_modified !== false || existsSync(pendingPath)) {
+    throw new Error("Proposal rejection did not archive safely.");
+  }
 
-  const staleApply = await client.callTool({
-    name: "knowledge_apply_proposal",
-    arguments: {
-      proposal_id: staleProposal.proposal_id,
-      user_approved: true,
-      approval_message: "Smoke-test approval used only to verify stale-content blocking.",
+  const digest = JSON.parse(execFileSync(
+    process.execPath,
+    [path.join(FIXTURE_GATEWAY, "proposal-digest.mjs"), "--json"],
+    { encoding: "utf8", env: { ...process.env, AGENT_KNOWLEDGE_STATE_DIR: STATE_ROOT } },
+  ));
+  if (digest.pending_count !== 0) throw new Error("Proposal digest retained rejected work.");
+
+  console.log(JSON.stringify({
+    ok: true,
+    tools: actualTools.length,
+    source_commit: currentCommit,
+    navigation_pages: schema.navigation_index.page_count,
+    retrieval: {
+      configured: search.retrieval.configured,
+      served_by: search.retrieval.served_by,
+      status: search.retrieval.status,
+      fallback_chain: search.retrieval.fallback_chain,
     },
-  });
-  const staleError = payload(staleApply).error || "";
-  if (!staleApply.isError || !staleError.includes("Proposal is stale")) {
-    throw new Error(`Stale proposal was not blocked by its content baseline: ${staleError}`);
-  }
-  const staleRejected = payload(
-    await client.callTool({
-      name: "knowledge_reject_proposal",
-      arguments: {
-        proposal_id: staleProposal.proposal_id,
-        user_rejected: true,
-        rejection_message: "Smoke-test cleanup after stale-content verification.",
-      },
-    }),
-  );
-  if (!staleRejected.rejected || existsSync(staleProposalFile)) {
-    throw new Error("Stale proposal cleanup failed.");
-  }
-  staleProposalFile = undefined;
-  staleRejectedFile = path.join(
-    os.homedir(),
-    ".gbrain",
-    "change-proposals",
-    "rejected",
-    `${staleProposal.proposal_id}.json`,
-  );
-  unlinkSync(staleRejectedFile);
-  staleRejectedFile = undefined;
-
-  console.log(
-    JSON.stringify(
-      {
-        ok: true,
-        tools: listedTools.tools.length,
-        intake_contract: "passed",
-        index_repair: "passed",
-        result_pages: resultList.pages.length,
-        source_guard: "passed",
-        proposal_queue: "passed",
-        exact_proposal_review: "passed",
-        proposal_digest: "passed",
-        proposal_content_baseline: "passed",
-        root_ui_artifact_proposal: "passed",
-        stale_proposal_guard: "passed",
-        conversation_approval_gate: "passed",
-        conversation_rejection_gate: "passed",
-        evaluations,
-        route_evaluations: routeEvaluations,
-      },
-      null,
-      2,
-    ),
-  );
+    trust_shadow: {
+      mode: trustRead.trust_shadow.mode,
+      enforced: trustRead.trust_shadow.enforced,
+      status: trustRead.trust_shadow.status,
+    },
+    proposal_gate: "passed",
+  }, null, 2));
 } finally {
-  for (const file of [
-    smokeProposalFile,
-    smokeRejectedFile,
-    staleProposalFile,
-    staleRejectedFile,
-    uiProposalFile,
-    uiRejectedFile,
-  ]) {
-    if (file && existsSync(file)) unlinkSync(file);
+  if (client) await client.close().catch(() => {});
+  rmSync(SMOKE_ROOT, { recursive: true, force: true });
+}
+
+function assertEqual(actual, expected, label) {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    throw new Error(`${label}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
   }
-  await client.close();
 }

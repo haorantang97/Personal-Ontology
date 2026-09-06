@@ -3,36 +3,15 @@
 import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readSchemaPack } from "./gateway/schema-pack.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const TYPE_BY_DIR = new Map([
-  ["projects", "project"],
-  ["decisions", "decision"],
-  ["methods", "methodology"],
-  ["syntheses", "synthesis"],
-  ["concepts", "concept"],
-  ["sources", "source"],
-]);
-const RESULT_TYPES = new Set([
-  "project",
-  "decision",
-  "methodology",
-  "synthesis",
-  "concept",
-]);
-const COMMON_FIELDS = [
-  "type",
-  "title",
-  "aliases",
-  "tags",
-  "created",
-  "updated",
-  "status",
-  "retrieval_scope",
-  "agent_priority",
-  "domain",
-  "evidence_status",
-];
+const PACK = readSchemaPack(ROOT);
+const TYPE_BY_DIR = new Map(PACK.page_types.flatMap((entry) =>
+  entry.path_prefixes.map((prefix) => [prefix.replace(/\/$/, ""), entry.name])));
+const TYPE_RULES = new Map(PACK.page_types.map((entry) => [entry.name, entry]));
+const RESULT_TYPES = new Set(PACK.page_types.filter((entry) => entry.retrieval_scope === "result").map((entry) => entry.name));
+const COMMON_FIELDS = PACK.common_fields;
 const LEGACY_PATHS = [".llm-wiki", "wiki", "raw", "purpose.md", "schema.md"];
 const allowLegacy = process.argv.includes("--allow-legacy");
 const errors = [];
@@ -137,7 +116,14 @@ function relationList(raw = "", label = "") {
 
 async function markdownFiles(directory) {
   const absoluteDirectory = path.join(ROOT, directory);
-  const entries = await readdir(absoluteDirectory, { withFileTypes: true });
+  let entries;
+  try { entries = await readdir(absoluteDirectory, { withFileTypes: true }); }
+  catch (error) {
+    // Git snapshots omit empty directories. An absent canonical prefix has
+    // zero pages; permission failures and other I/O errors still fail closed.
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
   const files = [];
   for (const entry of entries) {
     const relative = path.join(directory, entry.name);
@@ -182,7 +168,7 @@ const nameOwners = new Map();
 for (const relativePath of relativeFiles.sort()) {
   const text = await readFile(path.join(ROOT, relativePath), "utf8");
   const { fields, body } = parseFrontmatter(text, relativePath);
-  const directory = relativePath.split(path.sep)[0];
+  const directory = [...TYPE_BY_DIR.keys()].find((prefix) => relativePath.split(path.sep).join("/").startsWith(`${prefix}/`));
   const expectedType = TYPE_BY_DIR.get(directory);
   const actualType = scalar(fields.get("type"));
   const slug = path.basename(relativePath, ".md");
@@ -202,7 +188,7 @@ for (const relativePath of relativeFiles.sort()) {
       errors.push(`${relativePath}: '${dateField}' must use YYYY-MM-DD`);
     }
   }
-  if (!["high", "normal", "low"].includes(scalar(fields.get("agent_priority")))) {
+  if (!PACK.enums.agent_priority.includes(scalar(fields.get("agent_priority")))) {
     errors.push(`${relativePath}: invalid agent_priority`);
   }
 
@@ -221,39 +207,30 @@ for (const relativePath of relativeFiles.sort()) {
     inlineList(fields.get("modules"), `${relativePath}: modules`);
   }
   const maturity = scalar(fields.get("maturity"));
-  if (maturity && !["seed", "corroborated", "validated"].includes(maturity)) {
+  if (maturity && !PACK.enums.maturity.includes(maturity)) {
     errors.push(`${relativePath}: invalid maturity '${maturity}'`);
   }
   if (maturity === "seed" && scalar(fields.get("agent_priority")) === "high") {
     errors.push(`${relativePath}: maturity 'seed' cannot use agent_priority 'high'`);
   }
 
-  if (RESULT_TYPES.has(actualType)) {
-    if (!fields.has("related")) errors.push(`${relativePath}: result page needs 'related'`);
-    if (!fields.has("evidence")) errors.push(`${relativePath}: result page needs 'evidence'`);
-    if (scalar(fields.get("status")) !== "active") {
-      errors.push(`${relativePath}: result page status must be 'active'`);
+  const typeRule = TYPE_RULES.get(actualType);
+  if (typeRule) {
+    for (const field of typeRule.required_fields) {
+      if (!fields.has(field)) errors.push(`${relativePath}: ${actualType} needs '${field}'`);
     }
-    if (scalar(fields.get("retrieval_scope")) !== "result") {
-      errors.push(`${relativePath}: result page retrieval_scope must be 'result'`);
+    if (scalar(fields.get("status")) !== typeRule.required_status) {
+      errors.push(`${relativePath}: ${actualType} status must be '${typeRule.required_status}'`);
     }
-  }
-  if (actualType === "project" && !fields.has("last_confirmed")) {
-    errors.push(`${relativePath}: project needs 'last_confirmed'`);
+    if (scalar(fields.get("retrieval_scope")) !== typeRule.retrieval_scope) {
+      errors.push(`${relativePath}: ${actualType} retrieval_scope must be '${typeRule.retrieval_scope}'`);
+    }
   }
   if (actualType === "source") {
-    if (!fields.has("derived_pages")) errors.push(`${relativePath}: source needs 'derived_pages'`);
-    if (!fields.has("source_format")) errors.push(`${relativePath}: source needs 'source_format'`);
-    if (scalar(fields.get("status")) !== "evidence") {
-      errors.push(`${relativePath}: source status must be 'evidence'`);
-    }
-    if (scalar(fields.get("retrieval_scope")) !== "evidence") {
-      errors.push(`${relativePath}: source retrieval_scope must be 'evidence'`);
-    }
     const provenanceClass = scalar(fields.get("provenance_class"));
     if (
       provenanceClass
-      && !["first_party", "external", "system_observation", "mixed"].includes(provenanceClass)
+      && !PACK.enums.provenance_class.includes(provenanceClass)
     ) {
       errors.push(`${relativePath}: invalid provenance_class '${provenanceClass}'`);
     }
@@ -263,7 +240,7 @@ for (const relativePath of relativeFiles.sort()) {
   }
   if (actualType === "decision" && fields.has("decision_status")) {
     const decisionStatus = scalar(fields.get("decision_status"));
-    if (!["active", "superseded", "reversed", "expired"].includes(decisionStatus)) {
+    if (!PACK.enums.decision_status.includes(decisionStatus)) {
       errors.push(`${relativePath}: invalid decision_status '${decisionStatus}'`);
     }
   }

@@ -1,6 +1,6 @@
 ---
 name: lab-knowledge-intake
-description: Use whenever the user says 录入知识库、导入知识库、保存到知识库、沉淀到知识库, asks to add/update/merge/move/delete knowledge, or provides a link, attachment, text, or conversation to put into the user's Obsidian/GBrain knowledge base.
+description: Use whenever the user says 录入知识库、导入知识库、保存到知识库、沉淀到知识库, asks to add/update/merge/move/delete knowledge, or provides a link, attachment, text, or conversation to put into the user's schema-governed Markdown/Obsidian knowledge base through Agent Knowledge.
 ---
 
 # Lab Knowledge Intake

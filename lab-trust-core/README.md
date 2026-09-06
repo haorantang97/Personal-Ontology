@@ -36,11 +36,11 @@ Most knowledge bases store sources and conclusions but leave the final safety ru
 - Read-only Markdown/Obsidian adapter with Chinese Claim labels
 - Read-only CLI: `validate`, `evaluate`, `promotion-check`, and `audit`
 - Read-only MCP tools: `trust_validate`, `trust_evaluate`, and `trust_promotion_check`
-- Synthetic JSON, Obsidian, and optional GBrain-host examples
+- Synthetic JSON, Obsidian, and retrieval-host examples
 
 ## What is deliberately excluded
 
-This package does **not** store, retrieve, rank, approve, edit, commit, index, or synchronize knowledge. It has no Git, database, vector-index, GBrain-write, or proposal-queue capability. Pair it with any storage or retrieval system and call it after retrieval, before an Agent uses the result.
+This package does **not** store, retrieve, rank, approve, edit, commit, index, or synchronize knowledge. It has no Git, database, vector-index, storage-write, or proposal-queue capability. Pair it with any storage or retrieval system and call it after retrieval, before an Agent uses the result.
 
 ## Quick start
 
@@ -109,7 +109,7 @@ The full matrix also checks claim type, attribution, explicit allow/disallow lis
 
 ## Storage adapters
 
-Canonical JSON is the boundary. The included Markdown adapter reads trust metadata without modifying a note, strips Obsidian aliases and anchors from reference IDs, and refuses to guess missing maturity. Existing prose-first knowledge bases may need a gradual migration to the explicit contract; see [docs/migration.md](docs/migration.md). GBrain is optional and treated only as a possible retrieval host; see [docs/integration.md](docs/integration.md) and [examples/gbrain-host](examples/gbrain-host/README.md).
+Canonical JSON is the boundary. The included Markdown adapter reads trust metadata without modifying a note, strips Obsidian aliases and anchors from reference IDs, and refuses to guess missing maturity. Existing prose-first knowledge bases may need a gradual migration to the explicit contract; see [docs/migration.md](docs/migration.md). Any retrieval engine can act as the host; see [docs/integration.md](docs/integration.md) and [examples/retrieval-host](examples/retrieval-host/README.md).
 
 ## Development
 
@@ -125,7 +125,7 @@ The release gate type-checks, runs all tests, rebuilds JSON Schemas, scans for p
 
 ## 中文简介
 
-这是一个可嵌入的“知识使用边界”引擎，而不是事实判定器。它把 `seed / corroborated / validated`、来源家族独立性、Claim 类型、适用范围和预期用途变成确定性的代码规则；可接在 Obsidian、向量库、GBrain 或任意检索系统之后，阻止低成熟度材料被 Agent 当作默认事实或高风险决策依据。
+这是一个可嵌入的“知识使用边界”引擎，而不是事实判定器。它把 `seed / corroborated / validated`、来源家族独立性、Claim 类型、适用范围和预期用途变成确定性的代码规则；可接在 Obsidian、向量库或任意检索系统之后，阻止低成熟度材料被 Agent 当作默认事实或高风险决策依据。
 
 ## License
 

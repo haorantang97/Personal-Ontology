@@ -8,7 +8,7 @@ description: |
   “这次为什么失败”“学到了什么”“刚才那个坑记一下”“有哪些经验值得以后复用”等请求。
   Use whenever a finished or explicitly paused task, incident, interview, or long conversation should
   be audited and distilled into evidence-bounded, reusable conclusions. 不得用于仍在推进且当前目标是完成修复
-  的故障排查、单纯保存进度或普通内容摘要。本 skill 不直接写 Obsidian/GBrain；需要入库时先取得
+  的故障排查、单纯保存进度或普通内容摘要。本 skill 不直接写 Vault 或派生索引；需要入库时先取得
   agent-knowledge 的当前 intake 契约，并严格走精确提案与用户审批流程。
 ---
 
@@ -198,7 +198,7 @@ description: |
 
 ### 网关不可用
 
-只交付复盘审计并停止。不要直接编辑 Vault、Git、GBrain、Schema 或提案文件，不要退回到无人管理的 Markdown 文件。
+只交付复盘审计并停止。不要直接编辑 Vault、Git、派生索引、Schema 或提案文件，不要退回到无人管理的 Markdown 文件。
 
 ## 12. 完成标准
 

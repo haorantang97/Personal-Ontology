@@ -1,103 +1,194 @@
 # Setup / 安装与配置
 
-This guide turns the `lab-ontology/vault/` skeleton into a working, agent-accessible knowledge base on one machine. Everything below is derived from what the scripts in `lab-ontology/vault/ops/` actually call.
+This guide turns `lab-ontology/vault/` into an independent Git-backed Vault and exposes Agent Knowledge 1.8.0 to any MCP client.
 
-本指南把 `lab-ontology/vault/` 骨架变成一台机器上可被 Agent 访问的知识库。以下内容均来自 `lab-ontology/vault/ops/` 脚本的实际调用。
+本指南把 `lab-ontology/vault/` 骨架变成独立的 Git Vault，并把 Agent Knowledge 1.8.0 接入任意 MCP 客户端。
 
-## 1. Prerequisites / 依赖
+## 1. Requirements / 依赖
 
-| Requirement | Why | Notes |
+| Requirement | Required for | Notes |
 |---|---|---|
-| Node.js ≥ 20 | Gateway, validators, `node --test` | `npm ci` inside `vault/ops/gateway/` installs `@modelcontextprotocol/sdk` and `zod`. |
-| Git | Source of truth; every approved write becomes a commit | The gateway commits only the exact approved targets; pre-existing *staged* changes block approval. |
-| Obsidian | Editing and graph view | Open your copy of `vault/` as a vault. `.obsidian/` ships only app/graph settings; `workspace.json` is git-ignored. |
-| [GBrain](https://github.com/garrytan/gbrain) ≥ 0.42.0 | Derived search index, vectors, typed graph | The schema pack declares `gbrain_min_version: 0.42.0`. The gateway shells out to the CLI (`status`, `sync`, `call`, `schema validate/lint`). |
-| [Ollama](https://ollama.com) | Local embeddings for GBrain | `~/.gbrain/config.json` must set `embedding_model` to `ollama:<model>`; `knowledge_repair_index` will try to start Ollama on macOS if it is down. |
+| Node.js ≥ 20 | Gateway, validators and tests | `npm ci` installs the pinned MCP SDK, Trust Core release and Zod. |
+| Git | Canonical reads and approved writes | The Vault itself must be a Git repository with at least one commit. |
+| Obsidian | Human editing and graph view | Optional; Markdown and the gateway work without it. |
+| Ollama-compatible embedding service | Full Native hybrid search and index rebuilds | Must expose compatible `/api/tags` and `/api/embed` endpoints. The reference local runtime is Ollama. |
 
-Without GBrain the server still starts, `knowledge_intake` returns the contract, and proposals can be created and listed — but `knowledge_search`, `knowledge_route`, `knowledge_schema`, `knowledge_apply_proposal` and `knowledge_repair_index` return an error until the `gbrain` binary is reachable.
+The vector service is **not** needed to boot the server, inspect contracts, read an exact page, list pages, follow relations, or manage proposals. If Native retrieval is unavailable, search can fall back to deterministic keyword recall over the same committed Markdown and reports a degraded status. Full vector quality and a successful index rebuild do require a compatible embedding service.
 
-没有 GBrain 时网关仍能启动，`knowledge_intake` 能返回契约，提案也能创建和列出；但 `knowledge_search`、`knowledge_route`、`knowledge_schema`、`knowledge_apply_proposal` 与 `knowledge_repair_index` 会报错，直到 `gbrain` 可用。
+中文要点：Node.js 与 Git 是必需依赖；Obsidian 可选。没有向量服务时仍可启动、读取和审批，但搜索会明确降级为同提交关键词回退。
 
-## 2. Environment variables / 环境变量
-
-| Variable | Default | Used by |
-|---|---|---|
-| `GBRAIN_BIN` | `~/.bun/bin/gbrain` | Path to the GBrain CLI. Set it whenever GBrain is installed elsewhere. |
-| `GBRAIN_SOURCE_ID` | `knowledge` | GBrain source id that the vault is registered as. |
-| `OLLAMA_API_URL` | `http://127.0.0.1:11434` | Embedding service health check. |
-| `GBRAIN_IMPORT_SOURCE` | `~/node_modules/gbrain/src/commands/import.ts` | `ensure-gbrain-sync-filter.mjs` inspects the installed import walker here. |
-
-Paths that are **not** configurable: the shared approval inbox at `~/.gbrain/change-proposals/{pending,applied,rejected}`, the gateway lock at `~/.gbrain/gateway-db.lock`, and GBrain's own `~/.gbrain/config.json`.
-
-## 3. Create the vault / 初始化 Vault
+## 2. Create an independent Vault / 创建独立 Vault
 
 ```bash
 git clone https://github.com/haorantang97/Personal-Ontology.git
-cp -R Personal-Ontology/lab-ontology/vault ~/knowledge-base   # any path without surprises
-cd ~/knowledge-base
-git init && git add -A && git commit -m "Initialize knowledge base"
-cd ops/gateway && npm ci && npm run test:router
+cp -R Personal-Ontology/lab-ontology/vault knowledge-vault
+cd knowledge-vault
+git init
+git add -A
+git commit -m "Initialize knowledge vault"
+cd ops/gateway
+npm ci
 ```
 
-The vault must be its **own Git repository** — the gateway resolves the repository root as `ops/gateway/../..` and runs `git` there. Keep the directory names (`projects/`, `decisions/`, `methods/`, `syntheses/`, `concepts/`, `sources/`, `.raw/`) exactly as shipped; they are hard-coded in the validator, the gateway and the schema pack.
+Do not run the gateway directly inside the catalog repository. The copied Vault must have its own `.git/` directory because every canonical read and approved write is bound to its Git history.
 
-Vault 必须是**独立的 Git 仓库**：网关以 `ops/gateway/../..` 作为仓库根目录运行 `git`。目录名（`projects/`、`decisions/`、`methods/`、`syntheses/`、`concepts/`、`sources/`、`.raw/`）在校验器、网关和 schema pack 中写死，请保持原样。
+请保持这些目录名不变：`projects/`、`decisions/`、`methods/`、`syntheses/`、`concepts/`、`sources/`、`.raw/`。它们由 `ops/agent-knowledge-schema/pack.json` 定义并由校验器执行。
 
-## 4. Register GBrain + schema pack / 注册 GBrain 与 schema pack
+不要直接把公开目录当工作库运行。复制后的 Vault 必须单独 `git init` 并至少产生一次提交，之后的精确读取与审批写入才有可核验的 Git 基线。
 
-1. Install GBrain and initialise a local brain (`gbrain init --pglite` for a single-machine setup; see GBrain's README for other engines).
-2. Make `~/.gbrain/config.json` use an Ollama embedding model, e.g. `"embedding_model": "ollama:nomic-embed-text"`, and `ollama pull` that model.
-3. Register the vault as a source with id `knowledge` (or set `GBRAIN_SOURCE_ID`).
-4. Install the schema pack so that `gbrain schema validate agent-decision-memory` and `gbrain schema lint agent-decision-memory` succeed. The pack source of truth is `ops/gbrain-schema/pack.json`; GBrain keeps installed packs under `~/.gbrain/schema-packs/`.
-5. Run the upgrade checks once:
+## 3. Runtime state / 运行状态
+
+The gateway keeps rebuildable and operational state outside the Vault:
+
+```text
+~/.agent-knowledge/
+├── indexes/native/       # commit-bound index generations
+├── locks/                # process and proposal-apply locks
+└── proposals/
+    ├── pending/
+    ├── applied/
+    └── rejected/
+```
+
+Set `AGENT_KNOWLEDGE_STATE_DIR` to an absolute path if the default is unsuitable. This directory is not a second source of truth: proposals and receipts are audit state; indexes can be rebuilt from Git.
+
+Assign **every independent Vault** a dedicated absolute `AGENT_KNOWLEDGE_STATE_DIR`. Do not let two Vaults share the default `~/.agent-knowledge/`, because their pending/applied/rejected proposal queues and process locks would otherwise share one state tree.
+
+每个独立 Vault 都必须分配独立的绝对状态目录。不要让多个 Vault 共用默认目录，否则它们会共用提案队列和进程锁；状态目录不是事实源，Markdown 与 Git 才是。
+
+## 4. Connect an MCP client / 接入 MCP 客户端
+
+Use an absolute path because many MCP hosts do not expand `~`. Registration syntax is host-specific.
+
+所有路径都使用绝对路径。Codex、Claude Code 与 JSON 配置客户端的注册方式不同，不要混用。
+
+### Codex
+
+Use the official Codex CLI. The registration is written to `~/.codex/config.toml`:
 
 ```bash
-node ops/ensure-gbrain-sync-filter.mjs   # fails closed if the installed import walker could index governance/raw Markdown
-node ops/check-index-scope.mjs           # verifies only the six content directories are in the index
-node ops/validate-vault.mjs              # frontmatter, links, evidence consistency
+codex mcp add agent-knowledge -- node /absolute/path/to/knowledge-vault/ops/gateway/server.mjs
 ```
 
-`ensure-gbrain-sync-filter.mjs --apply` patches the installed GBrain import walker; review the installed version before applying.
+Use the isolated form for an actual Vault:
 
-## 5. Connect an agent / 接入 Agent
+```bash
+codex mcp add \
+  --env AGENT_KNOWLEDGE_STATE_DIR=/absolute/path/to/state/my-knowledge-vault \
+  agent-knowledge \
+  -- node /absolute/path/to/knowledge-vault/ops/gateway/server.mjs
+```
 
-Any MCP client can register the gateway as a stdio server (use absolute paths — MCP hosts do not expand `~`):
+Codex 不读取下面的 `mcpServers` JSON。注册完成后，重启或重新加载 MCP 服务，再检查 13 个 `knowledge_*` 工具是否可见。
+
+### Claude Code
+
+```bash
+claude mcp add agent-knowledge \
+  -e AGENT_KNOWLEDGE_STATE_DIR=/absolute/path/to/state/my-knowledge-vault \
+  -- node /absolute/path/to/knowledge-vault/ops/gateway/server.mjs
+```
+
+Claude Code 使用自己的 CLI；可选的 host-side Skills 只提供触发提示，网关仍是 Schema 与审批流程的权威入口。
+
+### Claude Desktop and other JSON-configured clients
+
+The following is a generic stdio example for Claude Desktop and clients that explicitly support `mcpServers`. It is **not Codex configuration**:
 
 ```json
 {
   "mcpServers": {
     "agent-knowledge": {
       "command": "node",
-      "args": ["/absolute/path/to/your-vault/ops/gateway/server.mjs"],
+      "args": ["/absolute/path/to/knowledge-vault/ops/gateway/server.mjs"],
       "env": {
-        "GBRAIN_BIN": "/absolute/path/to/.bun/bin/gbrain",
-        "GBRAIN_SOURCE_ID": "knowledge"
+        "AGENT_KNOWLEDGE_STATE_DIR": "/absolute/path/to/state/my-knowledge-vault"
       }
     }
   }
 }
 ```
 
-- Claude Desktop: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Claude Code: `claude mcp add agent-knowledge -e GBRAIN_BIN=... -- node /absolute/path/to/your-vault/ops/gateway/server.mjs`
-- Codex / Hermes: their respective MCP server configuration, same `command` / `args` / `env`.
+Claude Desktop 可把该对象放入 `claude_desktop_config.json`；其他客户端请按各自文档放置同等的 command、args 与 env。网关实现不分叉，只有客户端注册格式不同。
 
-Then install `lab-knowledge-intake` and `lab-knowledge-retrospective` from `skills/` (see their READMEs). The skills only *trigger* `knowledge_intake`; the MCP response is the contract.
+## 5. Enable full Native embeddings / 启用完整 Native 向量检索
 
-## 6. Daily operations / 日常操作
+The bundled Native index client uses an Ollama-compatible HTTP contract. With the reference Ollama runtime:
 
-| Task | Command / tool |
+```bash
+ollama pull qwen3-embedding:0.6b
+ollama serve
+```
+
+The 1.8.0 defaults are `http://127.0.0.1:11434`, model `qwen3-embedding:0.6b`, and 1024 dimensions. A replacement service must preserve the expected endpoint behavior, vector dimensions and stable model identity; changing the model requires a full index rebuild.
+
+After the MCP server is connected, call:
+
+```text
+knowledge_repair_index({"force_full": true})
+```
+
+A successful response binds the published index generation to the current Git commit and verifies 100% corpus coverage. This operation changes only derived state; it does not edit or commit Markdown.
+
+## 6. Verify the installation / 验证安装
+
+Run deterministic checks first; they use synthetic fixtures and do not require a live embedding service:
+
+```bash
+cd /absolute/path/to/knowledge-vault/ops/gateway
+npm ci
+npm run test:unit
+npm run validate:schema
+cd ../..
+node ops/validate-vault.mjs
+```
+
+Then connect an MCP client and verify that `listTools` returns exactly these 13 tools:
+
+```text
+knowledge_route
+knowledge_search
+knowledge_get
+knowledge_list
+knowledge_related
+knowledge_intake
+knowledge_schema
+knowledge_propose_changes
+knowledge_list_proposals
+knowledge_get_proposal
+knowledge_apply_proposal
+knowledge_reject_proposal
+knowledge_repair_index
+```
+
+`npm run test:smoke` creates and removes its own temporary Git Vault with synthetic pages. It deliberately leaves the Native generation unavailable and verifies the visible same-commit `local_markdown_keyword` fallback, scope isolation, Trust Core shadow and proposal gate without a live embedding service. Native vector/build/repair contracts are covered by unit tests with a synthetic embedding server. A real Ollama-compatible service is only an optional manual integration check and is not a CI prerequisite.
+
+中文验收顺序：先跑单元测试、Schema 校验和 Vault 校验；再在实际 MCP 客户端确认工具数恰好为 13。测试通过不等于真实向量服务、客户端配置或个人语料已经完成端到端验证。
+
+## 7. Daily operation / 日常使用
+
+| Task | Command or tool |
 |---|---|
-| Review the approval inbox locally | `node ops/gateway/proposal-digest.mjs` |
-| Validate the vault | `node ops/validate-vault.mjs` |
-| Rebuild graph edges from frontmatter links | `node ops/sync-graph.mjs` |
-| Index out of date after an approved write | call `knowledge_repair_index` (do not run `gbrain` by hand from an agent) |
-| Full end-to-end check | `cd ops/gateway && npm run test:smoke` — requires GBrain + Ollama and a populated vault. Search cases are read from `ops/gateway/smoke-cases.json` (`[query, expectedSlug]` pairs; the shipped file lists the author's pages), or from the file named by `SMOKE_CASES`. |
+| Read the current intake and schema contract | `knowledge_intake`, `knowledge_schema` |
+| Search reusable knowledge | `knowledge_route`, then `knowledge_get` for every selected exact slug |
+| Inspect provenance | `knowledge_search` with `scope: evidence` |
+| Review pending proposals locally | `node ops/gateway/proposal-digest.mjs` |
+| Validate Markdown and links | `node ops/validate-vault.mjs` |
+| Verify index coverage | `node ops/check-index-scope.mjs` |
+| Rebuild a stale or failed derived index | `knowledge_repair_index({"force_full": true})` |
 
-Never run unattended `gbrain dream` or `gbrain autopilot` against this source; the rules in `ops/AGENTS.md` forbid unattended mutation.
+Every knowledge change follows one sequence: obtain the current intake contract, deduplicate, create an exact proposal, show it to the user, wait for explicit approval of that proposal, then apply it through `knowledge_apply_proposal`. Direct file edits by an Agent are outside the contract.
 
-## 7. Where private data lives / 私人数据放在哪里
+审批规则：先读取当前契约和查重，再生成内容完整、目标明确的提案；只有用户明确批准该具体提案后才能应用。修正后的新提案必须重新批准，Agent 不得直接编辑正式知识文件。
 
-Your vault (Markdown, `.raw/`, `assets/`) lives **outside** this repository — in `~/knowledge-base` or wherever you copied it. This repository only tracks the system; keep it that way when you contribute changes back.
+## 8. Trust Core shadow / Trust Core 影子观测
 
-你的 Vault（Markdown、`.raw/`、`assets/`）在本仓库**之外**。本仓库只跟踪系统；回传修改时请保持这一边界。
+`npm ci` installs the immutable `lab-trust-core` release pinned by the gateway lockfile. `knowledge_get` may return a `trust_shadow` object after the scope gate. In 1.8.0 this observation is deliberately non-enforcing: it does not block reads, change routing, promote claims, or approve writes. No separate Trust Core setup is required for the default shadow integration.
+
+## 9. Privacy boundary / 隐私边界
+
+The public repository contains only an empty Vault skeleton, system code, synthetic fixtures and documentation. Keep personal Markdown, Raw material, assets, proposal history and generated indexes in your copied Vault and runtime-state directory, not in the catalog repository.
+
+公开仓库只包含空 Vault 骨架、系统代码、合成 fixture 与文档。个人 Markdown、Raw、资产、提案历史和索引都应留在你的独立 Vault 与运行状态目录中。
+
+每个 Vault 的状态目录也应彼此隔离并排除在版本控制之外；分享仓库前，同时检查工作 Vault 与状态目录中是否包含个人路径、提案正文或索引产物。

@@ -50,7 +50,7 @@ Codex 与 Claude Code 使用同一份 `SKILL.md`。
 
 - 核心审计协议没有运行时依赖；只要宿主能提供当前任务或用户指定的关联任务历史，就可以执行。历史不完整时仍可交付有边界的报告，但覆盖状态只能是 `PARTIAL`。
 - `agent-knowledge` MCP 网关是可选的方法增强，用于读取当前领域方法，见 [lab-ontology](../../lab-ontology/README.md)。它不可用时仍可执行内置协议，但不得声称已检查方法库。
-- `lab-knowledge-intake` 只在用户明确要求把批准后的结论写入知识库时需要；普通复盘不依赖它，也不得绕过审批直接写 Vault 或 GBrain。
+- `lab-knowledge-intake` 只在用户明确要求把批准后的结论写入知识库时需要；普通复盘不依赖它，也不得绕过审批直接写 Vault 或派生索引。
 
 ## Workflow
 

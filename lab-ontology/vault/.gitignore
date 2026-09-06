@@ -2,8 +2,9 @@
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 ops/gateway/node_modules/
+/index.md
 
-# Retired layouts and runtimes must not re-enter the GBrain source set.
+# Retired layouts must not re-enter the canonical knowledge corpus.
 /.llm-wiki/
 /wiki/
 /raw/

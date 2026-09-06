@@ -1,133 +1,144 @@
 # Architecture / 架构说明
 
-A short tour of how the pieces fit. The normative contracts are `vault/ops/SCHEMA.md` (what a page is) and `vault/ops/AGENTS.md` (how an agent behaves); this page explains *why* they are shaped that way and how the code enforces them.
+This page explains how Agent Knowledge 1.8.0 keeps canonical Markdown separate from rebuildable retrieval state. The normative contracts are `vault/ops/SCHEMA.md` (page model) and `vault/ops/AGENTS.md` (agent behaviour).
 
-本页是系统的导览。规范性契约在 `vault/ops/SCHEMA.md`（页面是什么）和 `vault/ops/AGENTS.md`（Agent 怎么做）；这里解释它们为何如此设计，以及代码如何执行。
+本页说明 Agent Knowledge 1.8.0 如何把正式 Markdown 与可重建检索状态分开。规范性契约在 `vault/ops/SCHEMA.md`（页面模型）和 `vault/ops/AGENTS.md`（Agent 行为）。
 
-## 1. Source of truth vs. derived layer / 事实源与派生层
+## 1. Source of truth and derived state / 事实源与派生状态
 
 ```mermaid
-flowchart TB
-    MD["Markdown + frontmatter<br/>(Obsidian vault)"] --> GIT["Git history"]
-    GIT -- "gbrain sync --source knowledge" --> IDX[("GBrain index<br/>pages · vectors · typed graph")]
-    MD -- "ops/sync-graph.mjs<br/>links → typed edges" --> IDX
-    IDX -- "knowledge_repair_index<br/>(rebuild at any time)" --> IDX
+flowchart LR
+    V["Vault Markdown"] --> G["immutable Git commit"]
+    G --> C["commit-bound KnowledgeCatalog"]
+    G --> N["Native hybrid index<br/>lexical + vector"]
+    E["Ollama-compatible<br/>/api/tags + /api/embed"] --> N
+    C --> K["same-commit keyword fallback<br/>typed relationships · index.md"]
+    N --> R["retrieval coordinator"]
+    K --> R
+    R --> P["precision-first router"]
+    S["~/.agent-knowledge<br/>indexes · locks · proposals"] --- N
 ```
 
-- **Markdown and Git are the only facts.** Every approved change is a Git commit whose message starts with `Knowledge:`.
-- **GBrain is disposable.** Vectors and graph edges are rebuilt from the Markdown; `knowledge_repair_index` verifies that the index reached the current Git commit and rebuilds edges. It never writes Markdown or Git, so it needs no approval.
-- **Governance files are not knowledge.** `README.md`, `ops/`, `.raw/` and `assets/` must never enter the index. `check-index-scope.mjs` fails closed if they do, and `ensure-gbrain-sync-filter.mjs` guards the installed GBrain import walker.
+- **Markdown and Git are the only facts.** Reads, schema responses and retrieval metadata are materialized from one immutable Git commit. Uncommitted working-tree content is not silently served.
+- **The Native index is disposable.** Its generations live outside the Vault under `~/.agent-knowledge/indexes/native/` by default and are bound to a source commit, schema fingerprint, corpus fingerprint and embedding-model identity.
+- **The fallback is commit-bound too.** If the Native vector or lexical arm is unhealthy, policy v2 selects `local_markdown_keyword`: deterministic keyword recall over the same committed Markdown catalog. The response reports `retrieval_status: degraded`; fallback does not pretend to preserve vector quality.
+- **Relationships remain Markdown facts.** Frontmatter links are normalized by the local catalog into typed outgoing and incoming relationships. No separate graph database is authoritative.
+- **`index.md` is navigation, not knowledge.** The catalog can regenerate a compact human index from the committed pages. It is excluded from retrieval and never becomes a second fact source.
 
-## 2. Three layers / 三层
+## 2. Three knowledge layers / 三层知识
 
-| Layer | Directory | Enters index | Typical origin |
+| Layer | Directory | Default retrieval | Purpose |
 |---|---|---|---|
-| Raw | `.raw/` | never | transcripts, recordings index, screenshots text, exports, interview handoffs |
-| Evidence | `sources/` | on demand (`scope: evidence`) | curated analysis of one coherent source, with numbered claims |
-| Result | `projects/` `decisions/` `methods/` `syntheses/` `concepts/` | default | anything that should change a future agent's judgment or action |
+| Raw | `.raw/` | never indexed | recoverable transcripts, exports and uncleaned material |
+| Evidence | `sources/` | only with `scope: evidence` or `all` | provenance, candidate claims, conflicts and allowed uses |
+| Result | `projects/` `decisions/` `methods/` `syntheses/` `concepts/` | yes | reusable state, commitments, procedures, conclusions and mechanisms |
 
-Raw → Source → Result is many-to-many. One Raw can yield zero or many Sources; one Source can carry many claims (`C-01`, `C-02`, …) and support zero or many result pages; one result page can be backed by several independent Sources. A Source that never produces a result page is legitimate — it is a candidate pool, not a failure.
+Raw → Source → Result is many-to-many. One Raw item may yield no Source; one Source may contain several stable claim IDs; one result page may cite several independent source families. The architecture never creates pages merely to preserve a one-to-one count.
 
 ## 3. Page types by future use / 按未来用途分类
 
 | Type | Enter when |
 |---|---|
-| `project` | Living current truth of a project: objectives, constraints, confirmed state, pending items. Updated in place by any agent via proposal; carries `last_confirmed`. |
-| `decision` | A rare, durable commitment: final choice, rationale, rejected alternatives, scope, implementation location, `decision_status`, `revisit_when`. Not an approval log. |
+| `project` | Living current truth: objectives, constraints, confirmed state and pending items. |
+| `decision` | A rare durable commitment with rationale, rejected alternatives, scope and `revisit_when`. |
 | `methodology` | A repeatable procedure with inputs, steps, outputs, boundaries and failure conditions. |
-| `synthesis` | A conclusion supported by **independent** source families that narrows choices. |
+| `synthesis` | Independent evidence converges on a conclusion that narrows choices. |
 | `concept` | A stable mechanism used repeatedly in judgment and not better represented elsewhere. |
-| `source` | Evidence analysis and candidate claims with provenance, source family, maturity and allowed/disallowed uses. |
+| `source` | Curated evidence or candidate claims with provenance, maturity and usage limits. |
 
-Classification follows *how an agent will use the page later*, never topic, platform, author or medium. Horizontal organisation is metadata: `domain`, `tags`, `modules`, `source_format`, `status`.
+Classification follows how an Agent will use the page later, not its author, platform or file format. `domain`, `tags`, `modules`, `source_format` and `status` provide horizontal organization.
 
-## 4. Trust, independence, maturity / 可信度与独立性
+## 4. Trust, independence and maturity / 可信度、独立性与成熟度
 
-`maturity` is one of `seed`, `corroborated`, `validated`.
+`maturity` is `seed`, `corroborated` or `validated`.
 
-- `seed` — one source or one event. Can feed candidate actions, interview questions, copy inspiration or experiment hypotheses; never a sole basis for stable facts or high-risk decisions.
-- `corroborated` — at least one truly independent source family, independent event, or the user's own run converges.
-- `validated` — repeated runs, controls or high-quality evidence within an explicit scope.
+- `seed`: one source or one event. It may suggest an experiment, question or expression pattern, but cannot be the sole basis for a stable fact or high-risk decision.
+- `corroborated`: at least one genuinely independent source family, independent event or the user's own run converges.
+- `validated`: repeated runs, controls or high-quality evidence support the claim inside an explicit scope.
 
-Same author, same institution, repost chains and mutual citations are **one** source family. Repetition does not promote a claim. Medical, legal, financial, stable-personality and strong-causal claims never get a lower bar because they are `seed`.
+Repeated posts from the same author, institution, citation chain or upstream source remain one source family. Conflicts are preserved rather than averaged away.
 
-## 5. Modules are weights, not walls / 模块是权重不是墙
+`lab-trust-core` is installed as a pinned package and called only after an allowed `knowledge_get`. It emits a bounded `trust_shadow` diagnostic tied to the returned committed Markdown. In 1.8.0 shadow mode it is **non-enforcing**: it cannot block a page, alter routing, promote maturity, authorize a write or make the gateway unavailable. Missing or incompatible Trust Core produces a diagnostic rather than a policy decision.
 
-`modules: []` on a page is a list of stable module slugs. Retrieval is always global first; pages whose modules match the current task are boosted, cross-module hits are still returned with a note on transfer conditions. `knowledge_search` accepts a `module` hint for exactly this; it widens the candidate pool and re-ranks instead of filtering.
+## 5. Modules are weights, not walls / 模块是权重，不是墙
+
+`modules: []` contains stable module slugs. Retrieval starts globally; a matching `module` hint boosts candidates without hiding cross-module pages. A module-specific claim becomes global only after independent evidence supports that transfer—not merely because it was repeated.
 
 ## 6. Read path / 读取路径
 
 ```mermaid
 sequenceDiagram
-    participant Agent
-    participant GW as Gateway
-    participant GB as GBrain
-    Agent->>GW: knowledge_route(query, context?, module?)
-    GW->>GB: search (result scope)
-    GB-->>GW: candidates + vectors
-    GW-->>Agent: read | review | none (+ explainable signals)
-    alt read
-        Agent->>GW: knowledge_get(slug)
-        GW-->>Agent: full page
+    participant A as Agent
+    participant G as Gateway
+    participant N as Native index
+    participant C as Committed catalog
+    participant T as Trust Core shadow
+    A->>G: knowledge_route(query, context?, module?)
+    G->>N: hybrid search at expected Git commit
+    alt Native is healthy
+        N-->>G: lexical + vector candidates
+    else any Native arm is unavailable
+        G->>C: same-commit keyword recall
+        C-->>G: degraded candidates
+    end
+    G-->>A: read | review | none + retrieval diagnostics
+    opt action = read
+        A->>G: knowledge_get(exact slug)
+        G->>C: materialize committed page
+        G->>T: observe bounded record + intended use
+        G-->>A: page + non-enforcing trust_shadow
     end
 ```
 
-`knowledge_route` is precision-first: vector similarity and module match order candidates but never trigger a read on their own. `review` exposes weak candidates without authorising them as facts. `none` with `retrieval_status: unavailable` means *the index could not be consulted*, not *nothing exists*. The route tool persists nothing.
+`knowledge_route` is precision-first: semantic similarity and module match rank candidates but never alone authorize an automatic read. `review` exposes weak candidates without turning them into facts. `none` with an unavailable retrieval status means the knowledge base could not be checked successfully, not that no relevant knowledge exists.
+
+Direct reads—`knowledge_get`, `knowledge_list`, `knowledge_related` and schema/contract reads—come from the committed catalog and do not require a healthy vector service. They fail closed if Git `HEAD` changes while a response is being constructed.
 
 ## 7. Write path / 写入路径
 
 ```mermaid
 sequenceDiagram
-    participant Agent
-    participant GW as Gateway
-    participant Inbox as ~/.gbrain/change-proposals
-    participant User
-    participant Vault as Vault (Git)
-    participant GB as GBrain
-    Agent->>GW: knowledge_intake()  — contract, routing table, workflow
-    Agent->>GW: knowledge_search / knowledge_get  — dedupe first
-    Agent->>GW: knowledge_propose_changes(summary, rationale, changes[])
-    GW->>Inbox: pending/KB-…json (content baseline per target)
-    GW-->>User: exact proposal shown once, near the end of the task
-    User-->>Agent: explicit approval in conversation
-    Agent->>GW: knowledge_apply_proposal(id, approval fields, approval message)
-    GW->>GW: baseline check (abort if any target changed)
-    GW->>Vault: temp worktree → validate-vault → schema validate/lint
-    GW->>Vault: git add <targets only> → git commit "Knowledge: …"
-    GW->>GB: sync --source knowledge → check-index-scope → sync-graph
-    GW->>Inbox: move to applied/
-    GW-->>Agent: commit, index_status
+    participant A as Agent
+    participant G as Gateway
+    participant Q as ~/.agent-knowledge/proposals
+    participant U as User
+    participant V as Vault Git
+    participant N as Native index
+    A->>G: knowledge_intake()
+    A->>G: search / get for deduplication
+    A->>G: knowledge_propose_changes(summary, rationale, changes[])
+    G->>Q: pending exact proposal + target baselines
+    G-->>U: show proposal
+    U-->>A: explicit approval of this proposal
+    A->>G: knowledge_apply_proposal(id, approval fields, approval message)
+    G->>G: recheck baselines and validate isolated candidate
+    G->>V: commit exact approved targets
+    G->>N: synchronize and verify commit coverage
+    G->>Q: durable applied receipt
 ```
 
-Guarantees enforced in `server.mjs`:
+The gateway enforces these boundaries:
 
-- A proposal records each target's content hash; approval aborts if another agent changed a target since.
-- Validation and indexing run in a clean temporary worktree, so unrelated unstaged or untracked work does not block approval. Pre-existing *staged* changes do block, because Git cannot tell who staged them.
-- Only the exact approved targets are staged and committed.
-- `origin: background` proposals stay in the shared inbox for a dedicated review task; conversation proposals are shown once.
-- Governance targets (`ops/SCHEMA.md`, `pack.json`, the gateway itself…) are only reachable through the `schema` action, which additionally runs `gbrain schema validate` / `lint`; `AGENTS.md` requires such changes to be approved separately from content.
-- Accidental Obsidian UI artifacts at the vault root (`.base`, `.canvas`) can be removed only by an exact hash-pinned `delete` proposal.
-- Rejection archives the proposal and never touches knowledge.
+- Each target carries its action and baseline. If the target changed after proposal creation, application stops and a new proposal needs new approval.
+- Content and governance/schema changes require separate exact proposals.
+- Validation runs against the proposed target tree before commit; only approved targets are staged.
+- A successful content commit remains the fact even if index synchronization later fails. `knowledge_repair_index` repairs only derived state and never edits Markdown or Git.
+- Rejection archives the proposal with its reason and never changes the Vault.
+- Runtime state defaults to `~/.agent-knowledge/`; it is outside the Vault and is not published with personal knowledge.
 
-## 8. Living pages and audits / 活页面与周期审计
+## 8. The 13-tool MCP surface / 13 个 MCP 工具
 
-`project` pages (and any page explicitly marked as current state) are living documents: any agent may propose incremental updates, no agent owns a page, and the update must update `updated` (and `last_confirmed` for projects), distinguish confirmed state from pending items and agent inference, and never append task logs or chat transcripts.
-
-Periodic audits are read-only by default. They check format, duplicates, contradictions, staleness, title pollution, broken links and evidence boundaries, and emit **separate** proposals per issue — never a single "clean everything" authorisation.
-
-## 9. Relations / 关系
-
-Frontmatter fields `related`, `evidence`, `derived_pages` hold quoted Obsidian links with full vault paths (`"[[methods/…]]"`). The validator normalises links, aliases and heading anchors to slugs; `sync-graph.mjs` turns them into typed edges:
-
-| Edge | Meaning |
+| Group | Tools |
 |---|---|
-| `derived_from` / `supports` | result ↔ source evidence (must be bidirectionally consistent) |
-| `applies_to` / `uses` | what a method, concept or decision applies to |
-| `depends_on` / `required_by` | prerequisites |
-| `contradicts` | conflicting conclusions, kept rather than auto-resolved |
-| `supersedes` / `superseded_by` | a newer decision or conclusion replaces an older one |
-| `related_to` | undirected adjacency between result pages |
+| Read | `knowledge_route`, `knowledge_search`, `knowledge_get`, `knowledge_list`, `knowledge_related` |
+| Contract | `knowledge_intake`, `knowledge_schema` |
+| Proposal | `knowledge_propose_changes`, `knowledge_list_proposals`, `knowledge_get_proposal`, `knowledge_apply_proposal`, `knowledge_reject_proposal` |
+| Maintain | `knowledge_repair_index` |
 
-## 10. Why skills stay thin / 为什么 Skill 刻意轻薄
+The MCP server is the shared behavior layer for any compatible host. Thin Skills may prompt an Agent to call it, but they do not duplicate the schema or bypass the approval gate.
 
-`lab-knowledge-intake` and `lab-knowledge-retrospective` contain no schema. They route the agent to `knowledge_intake` (the contract) and, for retrospectives, to `knowledge_search` for the *current* method pages. Moving the contract into the MCP response means every host — Claude, Codex, Hermes — writes the same format, and the schema can evolve without re-publishing skills.
+## 9. Living pages and audits / 活页面与周期审计
+
+Project pages and any page explicitly representing current state can be updated incrementally through proposals. Updates preserve the current truth, separate confirmed state from pending items and inference, and refresh `updated` plus `last_confirmed` where required. They do not append task logs or full chats.
+
+Periodic audits are read-only by default. They identify format drift, duplicates, contradictions, stale state, title noise, broken links and evidence-boundary violations, then produce separate reviewable proposals rather than one broad authorization.

@@ -1,173 +1,207 @@
 # Lab Ontology / 知识本体
 
 ![Node ≥ 20](https://img.shields.io/badge/node-%E2%89%A5%2020-339933?logo=node.js&logoColor=white)
+![Agent Knowledge 1.8.0](https://img.shields.io/badge/Agent%20Knowledge-1.8.0-6b4fbb)
 ![MCP](https://img.shields.io/badge/protocol-MCP-6b4fbb)
-![Obsidian + Git](https://img.shields.io/badge/source%20of%20truth-Obsidian%20%2B%20Git-7c3aed?logo=obsidian&logoColor=white)
+![Source of truth: Markdown + Git](https://img.shields.io/badge/source%20of%20truth-Markdown%20%2B%20Git-556)
 
-`lab-ontology` 是一套面向 AI Agent 的个人知识系统：一个带严格 Schema 的 Markdown/Git Vault，一个让任意 MCP 客户端读取并“提案式”写入的网关，以及围绕它们的校验、图谱同步和索引守卫。`lab-knowledge-intake` 与 `lab-knowledge-retrospective` 两个 Skill 只是把 Agent 引到这个网关上；Schema、路由与审批规则全部由网关返回。
+`lab-ontology` is a portable personal-knowledge system for AI agents. It combines an empty Markdown/Git Vault, a 13-tool MCP gateway named `agent-knowledge`, a Native hybrid retrieval index, deterministic same-commit fallback, schema and Vault validators, and exact proposal-gated writes. No personal knowledge ships with the module.
 
-它不是 prompt-only 的。目录里有可运行的 MCP 服务器（13 个 `knowledge_*` 工具，含 30 个路由单测）、GBrain schema pack、Vault 校验器、图谱同步器和索引范围守卫，以及一个可以直接用 Obsidian 打开的空 Vault 骨架。
+`lab-ontology` 是一套可移植的 AI Agent 个人知识系统：空的 Markdown/Git Vault、名为 `agent-knowledge` 的 13 工具 MCP 网关、Native 混合检索索引、同一 Git 提交上的确定性回退、Schema/Vault 校验，以及精确提案审批写入。模块不包含作者的个人知识。
 
-`lab-ontology` is a personal knowledge system for AI agents: a schema-governed Markdown/Git vault, an MCP gateway through which any agent reads it and *proposes* changes, and the validators, graph sync and index guards around them. Private knowledge never ships with it — the vault here is an empty skeleton.
-
-## Architecture
+## Architecture / 架构
 
 ```mermaid
 flowchart LR
-    subgraph Agents["Agents / 任意 MCP 客户端"]
-        C[Claude]
-        X[Codex]
-        H[Hermes / others]
-    end
-
-    subgraph Gateway["agent-knowledge gateway (MCP, stdio)"]
-        R[knowledge_route / search / get]
-        P[knowledge_propose_changes]
-        A[knowledge_apply_proposal]
-        F[knowledge_repair_index]
-    end
-
-    subgraph Vault["vault/ · Markdown + Git = source of truth"]
-        RAW[".raw/ (never indexed)"]
-        SRC["sources/ (evidence, on demand)"]
-        RES["projects/ decisions/ methods/<br/>syntheses/ concepts/ (default retrieval)"]
-    end
-
-    subgraph Derived["Derived layer (rebuildable)"]
-        GB[(GBrain index<br/>vectors + graph)]
-        OL[Ollama embeddings]
-    end
-
-    Q[["~/.gbrain/change-proposals/<br/>shared approval inbox"]]
-
-    C & X & H --> R
-    C & X & H --> P
-    R --> GB
-    R --> RES
-    P --> Q
-    Q -- "user approves in conversation" --> A
-    A -- "validate → git commit → sync → graph" --> Vault
-    A --> GB
-    F --> GB
-    GB --- OL
-    Vault -. "gbrain sync" .-> GB
+    A["Any MCP agent<br/>Codex · Claude · others"] --> G["agent-knowledge<br/>13 knowledge_* tools"]
+    G --> C["commit-bound Markdown catalog"]
+    G --> N["Native hybrid index<br/>lexical + vector"]
+    E["Ollama-compatible embeddings"] --> N
+    V[("Vault<br/>Markdown + Git")] --> C
+    V --> N
+    C -. "same-commit keyword fallback" .-> G
+    Q["~/.agent-knowledge<br/>indexes · locks · proposals"] --- G
+    G -. "knowledge_get observation" .-> T["Lab Trust Core<br/>non-enforcing shadow"]
 ```
 
-**三层一规则：** 只有结果层默认参与检索；证据层按需调用；Raw 永不进入索引。**写入即提案：** 用户在当前对话里明确批准之前，任何内容都不会触碰 Vault；批准后网关在一次事务里完成校验、Git 提交、GBrain 重建索引和图谱更新。
+The core invariant is simple: **Markdown and Git are the only facts.** Every read is tied to one immutable Git commit. Native index generations are rebuildable state outside the Vault. If the embedding service or an index arm is unavailable, search can fall back to deterministic keyword recall over the same committed Markdown and reports the degradation explicitly.
 
-| 层 | 位置 | 作用 | 默认检索 |
+核心不变量只有一句：**Markdown 与 Git 是唯一事实源。** 每次读取绑定到一个不可变 Git 提交。Native 索引位于 Vault 外，可以重建；向量服务或索引分支不可用时，系统会在同一提交的 Markdown 上做确定性关键词回退，并明确报告降级，而不是伪装成完整语义检索。
+
+### Three knowledge layers / 三层知识
+
+| Layer | Location | Role | Default retrieval |
 |---|---|---|---|
-| Raw | `vault/.raw/` | 原始转录、导出与未清洗材料，只保证可复原 | 否，不进索引 |
-| Evidence | `vault/sources/` | 出处、候选观点（`C-01…`）、来源家族独立性、成熟度、允许用途 | 按需 |
-| Result | `vault/projects/` `decisions/` `methods/` `syntheses/` `concepts/` | 能直接影响未来判断与行动的结果 | 是 |
+| Raw | `vault/.raw/` | recoverable transcripts, exports and uncleaned material | never indexed |
+| Evidence | `vault/sources/` | provenance, candidate claims, conflicts and usage boundaries | on demand |
+| Result | `vault/projects/`, `decisions/`, `methods/`, `syntheses/`, `concepts/` | state and conclusions that can change future judgment or action | yes |
 
-页面类型按“知识未来如何被 Agent 使用”划分，不按主题、平台或作者。可信度按 `seed → corroborated → validated` 以独立来源家族计，不按重复次数投票。`decision` 是稀少、持久、带 `revisit_when` 的承诺。完整契约见 [`vault/ops/SCHEMA.md`](vault/ops/SCHEMA.md)，Agent 规则见 [`vault/ops/AGENTS.md`](vault/ops/AGENTS.md)，更详细的设计说明见 [docs/architecture.md](docs/architecture.md)。
+Pages are classified by future Agent use, not author, platform or topic. `modules` boost relevant pages without creating hard walls. Maturity progresses `seed → corroborated → validated` through independent evidence families, not repeated claims from the same source.
 
-## Gateway tools
+完整页面契约见 [`vault/ops/SCHEMA.md`](vault/ops/SCHEMA.md)，Agent 行为规则见 [`vault/ops/AGENTS.md`](vault/ops/AGENTS.md)，实现说明见 [docs/architecture.md](docs/architecture.md)。
 
-| Group | Tool | Behaviour |
+## MCP tools / MCP 工具
+
+| Group | Tools | Contract |
 |---|---|---|
-| Read | `knowledge_route` | 精确优先的预检：返回 `read` / `review` / `none` 与可解释信号；向量相似度本身永不触发读取。 |
-| Read | `knowledge_search` | 结果层全局语义检索；`module` 只加权不过滤；`scope: evidence` 才触达 Source。 |
-| Read | `knowledge_get` · `knowledge_list` · `knowledge_related` | 整页、按类型/范围列表、带类型的图谱邻居。 |
-| Contract | `knowledge_intake` · `knowledge_schema` | 返回 Vault 位置、当前 schema pack、路由表和强制的提案流程。**任何写入先调 `knowledge_intake`。** |
-| Write | `knowledge_propose_changes` | 生成精确、带内容基线的提案（`create` / `update` / `delete` / `move` / `schema`）；不改动 Vault。 |
-| Write | `knowledge_list_proposals` · `knowledge_get_proposal` | 查看共享审批收件箱。 |
-| Write | `knowledge_apply_proposal` · `knowledge_reject_proposal` | 批准需显式字段与用户批准原话，目标被改动过即中止；拒绝只归档，不碰知识。 |
-| Maintain | `knowledge_repair_index` | 对照当前 Git 提交重建派生索引（需要时拉起 Ollama）；永不改 Markdown 或 Git。 |
+| Read | `knowledge_route`, `knowledge_search`, `knowledge_get`, `knowledge_list`, `knowledge_related` | Precision-first routing; result scope by default; exact committed reads and typed relations. |
+| Contract | `knowledge_intake`, `knowledge_schema` | Return the current schema, routing and mandatory workflow. Every requested write begins with `knowledge_intake`. |
+| Proposal | `knowledge_propose_changes`, `knowledge_list_proposals`, `knowledge_get_proposal`, `knowledge_apply_proposal`, `knowledge_reject_proposal` | Draft, inspect, explicitly approve or archive exact content-baselined changes. |
+| Maintain | `knowledge_repair_index` | Rebuild or verify Native derived state against current Git `HEAD`; never edit Markdown or Git. |
 
-## Installation
+Vector similarity can rank candidates but cannot alone trigger `action: read`. `action: review` is a weak-candidate signal, not permission to treat a title or summary as fact. Exact page reads and contract reads do not depend on a healthy vector service.
 
-安装的是一个**系统**，不是一个 Skill。复制 `vault/` 作为你自己的 Obsidian Vault，把其中的网关注册到任意 MCP 客户端，再按需安装两个配套 Skill。
+## Trust Core shadow / Trust Core 影子观测
 
-### 1. Vault + gateway
+Agent Knowledge 1.8.0 pins the public `lab-trust-core` release in its lockfile. After an allowed `knowledge_get`, the gateway can attach a bounded `trust_shadow` diagnostic to the returned committed record.
+
+This is deliberately **non-enforcing** in 1.8.0. Trust Core cannot block a read, change a router action, upgrade maturity, authorize a write or make the gateway unavailable. An unavailable or incompatible core is reported as a diagnostic. The standalone Trust Core can still be used independently outside `lab-ontology`.
+
+## Install / 安装
+
+Install the system, not only a Skill:
 
 ```bash
 git clone https://github.com/haorantang97/Personal-Ontology.git
-cp -R Personal-Ontology/lab-ontology/vault ~/knowledge-base      # 任意没有意外的路径
-cd ~/knowledge-base && git init && git add -A && git commit -m "Initialize knowledge base"
-cd ops/gateway && npm ci && npm run test:router
+cp -R Personal-Ontology/lab-ontology/vault knowledge-vault
+cd knowledge-vault
+git init
+git add -A
+git commit -m "Initialize knowledge vault"
+cd ops/gateway
+npm ci
 ```
 
-Vault 必须是独立的 Git 仓库——网关以 `ops/gateway/../..` 为仓库根运行 `git`。六个内容目录名在校验器、网关和 schema pack 中写死，请保持原样。
+The copied Vault must be an independent Git repository. Register its gateway with an MCP client using an absolute path:
 
-### 2. Register with an MCP client
+复制出的 Vault 必须是独立 Git 仓库。下面所有命令都要把示例路径替换成该 Vault 的绝对路径。
 
-使用绝对路径（MCP 宿主不展开 `~`）：
+Runtime state contains `indexes/`, `locks/` and `proposals/`. Assign every independent Vault its own absolute `AGENT_KNOWLEDGE_STATE_DIR`; otherwise multiple Vaults can accidentally share the default proposal queue at `~/.agent-knowledge/`.
+
+运行状态包含索引、锁和提案。每个独立 Vault 都应设置独立的 `AGENT_KNOWLEDGE_STATE_DIR`，不要让多个 Vault 共用默认的 `~/.agent-knowledge/` 提案队列。
+
+### Codex
+
+Register the stdio server with the official Codex CLI; Codex writes the entry to `~/.codex/config.toml`:
+
+```bash
+codex mcp add agent-knowledge -- node /absolute/path/to/knowledge-vault/ops/gateway/server.mjs
+```
+
+For the required per-Vault state isolation, include its dedicated state directory when registering:
+
+```bash
+codex mcp add \
+  --env AGENT_KNOWLEDGE_STATE_DIR=/absolute/path/to/state/my-knowledge-vault \
+  agent-knowledge \
+  -- node /absolute/path/to/knowledge-vault/ops/gateway/server.mjs
+```
+
+Codex 使用 CLI 注册 MCP，不使用下方的 `mcpServers` JSON。配置会写入 `~/.codex/config.toml`；注册后重启或重新加载 MCP 服务。可选的 `lab-knowledge-intake` 与 `lab-knowledge-retrospective` Skills 只提供触发指引，不能替代网关契约。
+
+### Claude Code
+
+```bash
+claude mcp add agent-knowledge \
+  -e AGENT_KNOWLEDGE_STATE_DIR=/absolute/path/to/state/my-knowledge-vault \
+  -- node /absolute/path/to/knowledge-vault/ops/gateway/server.mjs
+```
+
+Claude Code 同样通过 CLI 注册。Claude Desktop 或其他采用 JSON 配置的 MCP 客户端可使用下面的通用示例；这段 JSON **不适用于 Codex**：
 
 ```json
 {
   "mcpServers": {
     "agent-knowledge": {
       "command": "node",
-      "args": ["/absolute/path/to/your-vault/ops/gateway/server.mjs"],
-      "env": { "GBRAIN_BIN": "/absolute/path/to/gbrain" }
+      "args": ["/absolute/path/to/knowledge-vault/ops/gateway/server.mjs"],
+      "env": {
+        "AGENT_KNOWLEDGE_STATE_DIR": "/absolute/path/to/state/my-knowledge-vault"
+      }
     }
   }
 }
 ```
 
-### Codex
+The gateway itself is host-neutral; only the host's registration format differs.
 
-在 Codex 的 MCP 服务器配置中加入上面的 `agent-knowledge` 条目，然后安装 `$lab-knowledge-intake` 与 `$lab-knowledge-retrospective`（见各自 README）。
+### Native embeddings
 
-### Claude Code
-
-```bash
-claude mcp add agent-knowledge -e GBRAIN_BIN=/absolute/path/to/gbrain -- node /absolute/path/to/your-vault/ops/gateway/server.mjs
-```
-
-Claude Desktop 则编辑 `claude_desktop_config.json`。网关对所有宿主暴露同一份工具与契约，没有分叉实现。
-
-### 3. Derived index
-
-检索、路由与批准流程需要 [GBrain](https://github.com/garrytan/gbrain) ≥ 0.42.0（作为 CLI 被网关调用）和本地 [Ollama](https://ollama.com) embedding。注册 source、安装 schema pack、环境变量（`GBRAIN_BIN`、`GBRAIN_SOURCE_ID`、`OLLAMA_API_URL`）与升级检查见 [docs/setup.md](docs/setup.md)。
-
-## Requirements
-
-- Node.js ≥ 20；`npm ci` 安装 `@modelcontextprotocol/sdk` 与 `zod`。
-- Git。
-- Obsidian（编辑与图谱视图；非必需）。
-- GBrain ≥ 0.42.0 与 Ollama：派生索引层。没有它们时网关仍能启动、返回契约、创建和列出提案，但 `knowledge_search` / `knowledge_route` / `knowledge_schema` / `knowledge_apply_proposal` / `knowledge_repair_index` 会报错。
-
-## Verify
+Full hybrid retrieval and index rebuilds use an Ollama-compatible `/api/tags` and `/api/embed` service. The reference defaults are `http://127.0.0.1:11434`, `qwen3-embedding:0.6b`, and 1024 dimensions:
 
 ```bash
-cd vault/ops/gateway && npm ci && npm run test:router     # 30 个路由单测，不需要 GBrain
-cd ../.. && node ops/validate-vault.mjs                    # 对骨架校验通过
+ollama pull qwen3-embedding:0.6b
+ollama serve
 ```
 
-网关启动探针（不需要 GBrain）：连接 `server.mjs`，`listTools` 应返回恰好 13 个 `knowledge_*` 工具。仓库的 CI 工作流 [`ci.yml`](../.github/workflows/ci.yml) 就是跑这三步。
+Then call `knowledge_repair_index({"force_full": true})` through MCP. A live embedding service is optional for boot, deterministic unit tests, exact reads and degraded keyword fallback; it is required to build and query the vector arm.
 
-端到端检查 `npm run test:smoke` 需要 GBrain + Ollama 和一个有内容的 Vault。检索用例放在 `ops/gateway/smoke-cases.json`（`[查询, 期望命中的页面 slug]` 数组，随仓库提供的是作者 Vault 的示例），把它换成你自己的页面，或用 `SMOKE_CASES=<path>` 指向别的文件。
+See [docs/setup.md](docs/setup.md) for the complete installation, verification and privacy boundary.
 
-## Privacy
+## Verify / 验证
 
-- 本模块只发布系统：Schema、网关、校验器、空 Vault 骨架。原始 Vault 的 `.raw/` 访谈、`sources/` 证据页、项目页与资产一概不含。
-- 你的 Vault 应放在本仓库之外（例如 `~/knowledge-base`）；回传系统改动时保持这一边界。
-- 共享审批收件箱在 `~/.gbrain/change-proposals/`，批准记录保存在用户本机，不进入 Vault。
-- `ops/`、`.raw/`、根 README 永不进入索引；`check-index-scope.mjs` 会在它们泄入索引时直接失败。
-- 不运行无人值守的 `gbrain dream` / `gbrain autopilot`。
+The deterministic verification path uses only synthetic fixtures and no live Ollama process:
 
-## Upgrade
+```bash
+cd vault/ops/gateway
+npm ci
+npm run test:unit
+npm run validate:schema
+cd ../..
+node ops/validate-vault.mjs
+```
 
-用新版本替换 `vault/ops/` 下的系统文件，保留你自己的内容目录与 `.obsidian/`。按你 Vault 的规则，`ops/` 属于治理文件，应通过 `schema` 类型提案经批准后更新。升级 GBrain 后运行 `node ops/ensure-gbrain-sync-filter.mjs`、`node ops/check-index-scope.mjs` 与 `cd ops/gateway && npm test`。
+The MCP boot probe must return exactly 13 named `knowledge_*` tools. Repository CI runs these checks on Node 20 and 24 inside a temporary, independently initialized Git Vault so a passing catalog checkout cannot hide a missing Vault precondition. `npm run test:smoke` creates its own temporary synthetic Vault and verifies the same-commit keyword fallback without a live embedding service. A real compatible service is reserved for an optional manual integration check.
 
-## Uninstall
+Passing deterministic tests and the boot probe demonstrates structure, contracts and isolated behavior; it does not claim that a user's local embedding service, MCP host configuration or private corpus has been exercised.
 
-从 MCP 客户端配置中移除 `agent-knowledge` 条目，删除你复制出去的 Vault 目录（其中包含你的知识，请先确认已备份），并按需清理 `~/.gbrain/change-proposals/`。GBrain 与 Ollama 是独立安装的软件，按各自方式卸载。
+这些检查通过，只能证明代码结构、契约和隔离测试成立；仍需在实际客户端确认 13 个工具可见，并按需重建真实 Vault 的向量索引。
 
-## Troubleshooting
+## Exact proposal gate / 精确提案门
 
-- `spawnSync .../gbrain ENOENT`：网关找不到 GBrain CLI，设置 `GBRAIN_BIN`。
-- 批准被拒、提示目标已被改动：另一个 Agent 在提案之后改了同一页面，重新查重并重新提案。
-- 批准被拒、提示存在已暂存改动：Vault 里有 `git add` 过但未提交的内容，先提交或撤销暂存。
-- 批准成功但 `index_status = failed`：调用 `knowledge_repair_index`，不要让 Agent 手动跑 `gbrain`。
+An Agent may search and draft without approval, but cannot directly create, update, move or delete knowledge. The enforced sequence is:
 
-## License
+1. Call `knowledge_intake` for the current contract.
+2. Search and read existing pages to avoid duplicates.
+3. Call `knowledge_propose_changes` with complete target contents and exact actions.
+4. Show the proposal and wait for explicit approval of that proposal.
+5. Call `knowledge_apply_proposal` with the approval record.
 
-本模块采用 [PolyForm Noncommercial License 1.0.0](LICENSE.md)（全文见仓库根目录）：个人与非商业用途可自由使用、修改和分发；商业用途需另行取得著作权人的书面授权。第三方组件见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+The gateway rechecks every target baseline, validates the proposed tree, commits only approved targets and synchronizes the Native index. If the index fails after the content commit, the Git commit remains authoritative and `knowledge_repair_index` repairs only derived state. A corrected or stale proposal always needs fresh approval.
 
-## Provenance
+中文要点：Agent 只能先生成可审查提案；用户明确批准具体提案后，才能由 `knowledge_apply_proposal` 应用。修正版或已过期提案必须重新批准，不能沿用旧批准。
 
-`vault/ops/` 是作者本地 Vault 治理层的快照（gateway 1.6.0，schema pack `agent-decision-memory` 1.1.1）。相对原件只做了三处可移植性修改：`server.mjs` 与 `sync-graph.mjs` 中 `GBRAIN_BIN` 的默认值从作者机器的绝对路径改为 `~/.bun/bin/gbrain`；`ops/gateway/README.md` 中的示例路径改为占位符；`smoke-test.mjs` 的检索用例从代码内联改为读取 `smoke-cases.json`（或 `SMOKE_CASES` 环境变量指定的文件）。`vault/README.md` 是原 Vault 的根 README，保持原样。
+## Human navigation / 人类导航
+
+At server startup the committed catalog can regenerate a compact root `index.md` for human browsing. The file is ignored by Git and excluded from retrieval. Obsidian's folder tree and Graph View remain useful interfaces, but neither replaces this generated summary or the Agent retrieval path.
+
+## Privacy / 隐私
+
+- The public module contains an empty Vault skeleton, system code, neutral synthetic fixtures and documentation only.
+- Keep the working Vault outside this catalog repository. Personal Markdown, Raw, assets, proposals and generated indexes must not be committed here.
+- `.raw/`, `ops/`, root governance documents and generated `index.md` never enter the retrieval corpus.
+- Trust shadow receives only the bounded committed record being returned; it is not a second knowledge store.
+
+中文要点：公开仓库只放空骨架、代码、合成测试数据和文档。个人页面、Raw、资产、提案与运行索引应留在独立 Vault 和专属状态目录中，不得提交到本目录。
+
+## Upgrade / 升级
+
+Back up the working Vault, replace the system files under `vault/ops/` with the newer release, run deterministic verification, restart the MCP server, then call `knowledge_repair_index({"force_full": true})`. In a governed Vault, system-file changes use a separate exact schema/governance proposal rather than being bundled with content.
+
+## Uninstall / 卸载
+
+Remove the `agent-knowledge` MCP entry. Back up any personal content before deleting the copied Vault. The rebuildable runtime directory `~/.agent-knowledge/` can be removed separately after confirming that proposal receipts are no longer needed. Ollama is an independent application and is uninstalled separately.
+
+## Troubleshooting / 故障排查
+
+- **Server refuses to start:** confirm the Vault has a Git commit, run `npm ci`, and run `npm run validate:schema`.
+- **Search reports degraded:** the same-commit keyword fallback is active. Start the compatible embedding service and call `knowledge_repair_index({"force_full": true})` to restore full hybrid retrieval.
+- **Proposal is stale:** a target changed after proposal creation. Recreate the exact proposal and obtain fresh approval.
+- **Approved commit reports an index failure:** keep the committed Markdown as fact and call `knowledge_repair_index`; do not hand-edit runtime index files.
+- **Trust shadow reports unavailable:** page delivery remains valid in shadow mode. Re-run `npm ci` and the Trust Core live test before treating it as an integration fault.
+
+## License and provenance / 许可与来源
+
+This module uses the repository's [PolyForm Noncommercial License 1.0.0](LICENSE.md). The separately packaged `lab-trust-core` dependency retains its MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+`vault/ops/` is the Agent Knowledge 1.8.0 Native-only reference implementation published with neutral fixtures. The public boundary intentionally omits personal pages, paths, query cases, proposal history and runtime state.

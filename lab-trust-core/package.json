@@ -1,6 +1,6 @@
 {
   "name": "lab-trust-core",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Portable evidence and maturity policy for Agent-facing knowledge systems",
   "license": "MIT",
   "keywords": [

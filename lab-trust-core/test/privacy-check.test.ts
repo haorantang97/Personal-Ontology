@@ -29,7 +29,16 @@ test("rejects personal absolute home paths", async () => {
 test("rejects private proposal-queue references", async () => {
   const { root, file } = await fixture(
     "notes.md",
-    `Read ${".gbrain" + "/" + "change-proposals"}/pending.json`
+    `Read ${".agent-knowledge" + "/" + "proposals"}/pending/example.json`
+  );
+  const findings = await scanFiles([file], { root });
+  assert.ok(findings.some((finding) => finding.code === "PRIVATE_PROPOSAL_PATH"));
+});
+
+test("rejects files stored in the private proposal state tree", async () => {
+  const { root, file } = await fixture(
+    [".agent-knowledge", "proposals", "pending", "synthetic-proposal.json"].join("/"),
+    JSON.stringify({ summary: "Synthetic proposal", changes: [] })
   );
   const findings = await scanFiles([file], { root });
   assert.ok(findings.some((finding) => finding.code === "PRIVATE_PROPOSAL_PATH"));

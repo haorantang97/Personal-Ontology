@@ -1,17 +1,21 @@
 {
   "name": "agent-knowledge-gateway",
-  "version": "1.6.0",
+  "version": "1.8.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
     "digest": "node proposal-digest.mjs",
-    "test": "npm run test:router && npm run test:smoke",
+    "test": "npm run test:unit && npm run test:smoke",
+    "test:unit": "node --test knowledge-router.test.mjs knowledge-catalog.test.mjs process-lock.test.mjs retrieval-index.test.mjs native-index.test.mjs runtime-paths.test.mjs schema-pack.test.mjs retrieval-coordinator.test.mjs repository-snapshot.test.mjs proposal-store.test.mjs",
+    "validate:schema": "node ../validate-schema-pack.mjs",
     "test:router": "node --test knowledge-router.test.mjs",
+    "test:trustcore-live": "TRUST_CORE_LIVE_REQUIRED=1 node --test knowledge-router.test.mjs",
     "test:smoke": "node smoke-test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",
+    "lab-trust-core": "https://github.com/haorantang97/Personal-Ontology/releases/download/lab-trust-core-v0.1.2/lab-trust-core-0.1.2.tgz",
     "zod": "4.1.12"
   }
 }

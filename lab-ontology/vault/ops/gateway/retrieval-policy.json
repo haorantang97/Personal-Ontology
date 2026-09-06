@@ -1,0 +1,5 @@
+{
+  "version": 2,
+  "active_backend": "native",
+  "fallback_backend": "local_markdown_keyword"
+}
