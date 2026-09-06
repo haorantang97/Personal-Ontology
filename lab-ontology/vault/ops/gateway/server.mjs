@@ -1439,10 +1439,12 @@ server.registerTool(
         return result({ ok: false, source_commit: commit,
           error: `Type '${type}' is blocked by scope '${scope}'.` }, true);
       }
-      const pages = catalog.listPages({ type, limit: 200, sort: "updated_desc" });
-      const filtered = (pages || [])
-        .filter((page) => runtime.scopeAllows(page.type, scope))
-        .slice(0, limit);
+      const scopeTypes = scope === "result"
+        ? runtime.resultTypes
+        : scope === "evidence"
+          ? runtime.evidenceTypes
+          : null;
+      const filtered = catalog.listPages({ type, types: scopeTypes, limit, sort: "updated_desc" });
       assertCommittedReadStable(commit);
       return result({ ok: true, scope, source_commit: commit, pages: filtered });
     } catch (error) {
@@ -1532,8 +1534,8 @@ server.registerTool(
           catalog_source: "committed Git objects at one immutable HEAD",
           direct_read_binding:
             "knowledge_get/list/related/schema fail closed if HEAD changes during a response",
-          proposal_state_root: "~/.agent-knowledge/proposals",
-          lock_root: "~/.agent-knowledge/locks",
+          proposal_state_root: PROPOSAL_ROOT,
+          lock_root: path.dirname(LOCK_PATH),
           retrieval_backend: {
             contract: "native-hybrid-index-v1",
             policy: "ops/gateway/retrieval-policy.json (committed Git HEAD only)",

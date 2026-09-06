@@ -702,9 +702,13 @@ export class KnowledgeCatalog {
     return candidates.length === 1 ? candidates[0] : null;
   }
 
-  listPages({ type, limit = 50, sort = "updated_desc" } = {}) {
+  listPages({ type, types = null, limit = 50, sort = "updated_desc" } = {}) {
+    const allowedTypes = Array.isArray(types)
+      ? new Set(types.map(String))
+      : null;
     const pages = this.allPages()
-      .filter((page) => !type || page.type === type)
+      .filter((page) => (!type || page.type === type)
+        && (!allowedTypes || allowedTypes.has(page.type)))
       .map((page) => ({
         slug: page.slug,
         type: page.type,
