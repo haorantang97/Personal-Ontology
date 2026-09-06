@@ -40,6 +40,11 @@ tags (`vX.Y.Z`). Module-internal versions are noted in the entries.
 - CI now verifies the complete unit suite, Schema/Vault validation and the exact
   13-tool MCP surface on Node 20 and 24 inside a temporary, independently
   initialized Git Vault.
+- `knowledge_list` now applies result/evidence scope before its limit, so a
+  large population in one layer cannot silently hide pages from the other.
+- `knowledge_schema` now reports the effective proposal and lock directories
+  after `AGENT_KNOWLEDGE_STATE_DIR` resolution instead of always displaying
+  the default paths.
 - `lab-trust-core` 0.1.2 replaces the optional host example with the generic
   `examples/retrieval-host/` integration and correctly rejects both references
   to and files under the canonical `~/.agent-knowledge/proposals/` state tree.

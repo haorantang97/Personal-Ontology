@@ -87,7 +87,7 @@ content approval.
 ## Runtime state
 
 All mutable product state is under `~/.agent-knowledge/` (or the explicit
-`AGENT_KNOWLEDGE_STATE_DIR` used by tests):
+`AGENT_KNOWLEDGE_STATE_DIR` assigned to this Vault):
 
 ```text
 ~/.agent-knowledge/
@@ -97,6 +97,10 @@ All mutable product state is under `~/.agent-knowledge/` (or the explicit
 ```
 
 The repository contains no runtime database or index generation.
+
+Commands launched from a terminal do not inherit an MCP client's stored
+environment. Pass the same `AGENT_KNOWLEDGE_STATE_DIR` explicitly to
+`proposal-digest.mjs` and other state-aware maintenance commands.
 
 ## Tests
 

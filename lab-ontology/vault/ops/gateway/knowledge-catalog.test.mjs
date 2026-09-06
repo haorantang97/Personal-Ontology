@@ -79,13 +79,17 @@ function commitFixture(root) {
 // Callback integration, not live MCP E2E: execute the actual server helpers and
 // registered callbacks without starting the gateway or touching shared state.
 // Only external retrieval/TrustCore observation and response transport are fakes.
-function committedReadHandlers(t, { observeTrust = async () => ({ mode: "test" }) } = {}) {
+function committedReadHandlers(t, {
+  observeTrust = async () => ({ mode: "test" }),
+  prepareFixture = () => {},
+} = {}) {
   const { root } = fixture(t);
   for (const relative of ["sources/disguised.md", ".raw/disguised.md"]) {
     writeFileSync(path.join(root, relative), "---\ntype: methodology\ntitle: Disguised\n---\nPRIVATE EVIDENCE\n");
   }
   writeFileSync(path.join(root, "ops/SCHEMA.md"), "APPROVED SCHEMA CONTRACT\n");
   writeFileSync(path.join(root, "ops/AGENTS.md"), "APPROVED AGENT RULES\n");
+  prepareFixture(root);
   const commit = commitFixture(root);
   const git = (args) => execFileSync("git", args, {
     cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
@@ -110,6 +114,8 @@ function committedReadHandlers(t, { observeTrust = async () => ({ mode: "test" }
     assert.equal(command, "git");
     return git(args).trim();
   }, KnowledgeCatalog, deriveSchemaRuntime);
+  const proposalRoot = path.join(root, "isolated-state", "proposals");
+  const lockPath = path.join(root, "isolated-state", "locks", "proposal-apply.lock");
   const bindings = {
     ...helpers,
     ROOT: root,
@@ -118,6 +124,9 @@ function committedReadHandlers(t, { observeTrust = async () => ({ mode: "test" }
     navigationIndexState: {},
     SCHEMA_PATH: path.join(root, "ops/SCHEMA.md"),
     AGENT_RULES_PATH: path.join(root, "ops/AGENTS.md"),
+    PROPOSAL_ROOT: proposalRoot,
+    LOCK_PATH: lockPath,
+    path,
     readFileSync,
     schemaRuntime: startupRuntime,
     RESULT_TYPES: new Set(startupRuntime.resultTypes),
@@ -174,7 +183,7 @@ function committedReadHandlers(t, { observeTrust = async () => ({ mode: "test" }
     }
     return new Function(...Object.keys(bindings), `return (${serverSource.slice(start, end)});`)(...Object.values(bindings));
   };
-  return { root, commit, git, handler };
+  return { root, commit, git, handler, proposalRoot, lockRoot: path.dirname(lockPath) };
 }
 
 test("server committed callbacks block Source and disguised paths under default result scope", async (t) => {
@@ -198,6 +207,51 @@ test("server committed callbacks block Source and disguised paths under default 
   assert.equal(typed.data.ok, false, "typed preflight must also use committed scope");
 });
 
+test("knowledge_list filters scope before applying its limit", async (t) => {
+  const { handler } = committedReadHandlers(t, {
+    prepareFixture: (root) => {
+      for (let index = 0; index < 205; index++) {
+        const suffix = String(index).padStart(3, "0");
+        writeFileSync(path.join(root, `sources/newer-${suffix}.md`), `---
+type: source
+title: Newer Source ${suffix}
+updated: 2030-02-01
+---
+# Newer Source ${suffix}
+`);
+      }
+    },
+  });
+  const response = await handler("knowledge_list")({ scope: "result", limit: 1 });
+  assert.equal(response.data.ok, true);
+  assert.deepEqual(response.data.pages.map((page) => page.slug), ["methods/alpha"]);
+});
+
+test("knowledge_list also protects evidence pages from newer result pages", async (t) => {
+  const { handler } = committedReadHandlers(t, {
+    prepareFixture: (root) => {
+      for (let index = 0; index < 205; index++) {
+        const suffix = String(index).padStart(3, "0");
+        writeFileSync(path.join(root, `methods/newer-${suffix}.md`), `---
+type: methodology
+title: Newer Method ${suffix}
+updated: 2030-02-01
+---
+# Newer Method ${suffix}
+`);
+      }
+    },
+  });
+  const response = await handler("knowledge_list")({ scope: "evidence", limit: 1 });
+  assert.equal(response.data.ok, true);
+  assert.deepEqual(response.data.pages.map((page) => page.slug), ["sources/source-one"]);
+});
+
+test("catalog treats an explicit empty type scope as empty", (t) => {
+  const { catalog } = fixture(t);
+  assert.deepEqual(catalog.listPages({ types: [], limit: 100 }), []);
+});
+
 test("server TrustCore observes the same committed Markdown used for the returned page", async (t) => {
   let observed;
   const { handler, git, commit } = committedReadHandlers(t, {
@@ -218,7 +272,7 @@ test("server TrustCore observes the same committed Markdown used for the returne
 });
 
 test("server schema and intake contracts match Git rather than dirty worktree bytes", async (t) => {
-  const { handler, git, commit } = committedReadHandlers(t);
+  const { handler, git, commit, proposalRoot, lockRoot } = committedReadHandlers(t);
   for (const name of ["knowledge_schema", "knowledge_intake"]) {
     const response = await handler(name)({ user_request: "test intake" });
     assert.equal(response.data.ok, true, response.data.error);
@@ -236,6 +290,8 @@ test("server schema and intake contracts match Git rather than dirty worktree by
         response.data.gateway_runtime.direct_read_binding,
         "knowledge_get/list/related/schema fail closed if HEAD changes during a response",
       );
+      assert.equal(response.data.gateway_runtime.proposal_state_root, proposalRoot);
+      assert.equal(response.data.gateway_runtime.lock_root, lockRoot);
       assert.equal(response.data.gateway_runtime.catalog_reads_from_vault, undefined);
     }
   }

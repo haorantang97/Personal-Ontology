@@ -172,14 +172,18 @@ knowledge_repair_index
 | Read the current intake and schema contract | `knowledge_intake`, `knowledge_schema` |
 | Search reusable knowledge | `knowledge_route`, then `knowledge_get` for every selected exact slug |
 | Inspect provenance | `knowledge_search` with `scope: evidence` |
-| Review pending proposals locally | `node ops/gateway/proposal-digest.mjs` |
+| Review pending proposals locally | `AGENT_KNOWLEDGE_STATE_DIR=/absolute/path/to/state/my-knowledge-vault node ops/gateway/proposal-digest.mjs` |
 | Validate Markdown and links | `node ops/validate-vault.mjs` |
 | Verify index coverage | `node ops/check-index-scope.mjs` |
 | Rebuild a stale or failed derived index | `knowledge_repair_index({"force_full": true})` |
 
 Every knowledge change follows one sequence: obtain the current intake contract, deduplicate, create an exact proposal, show it to the user, wait for explicit approval of that proposal, then apply it through `knowledge_apply_proposal`. Direct file edits by an Agent are outside the contract.
 
+Shell maintenance commands do not inherit environment variables stored inside an MCP client's configuration. Pass the same `AGENT_KNOWLEDGE_STATE_DIR` explicitly when running `proposal-digest.mjs`; `knowledge_schema` reports the effective proposal and lock roots for verification.
+
 审批规则：先读取当前契约和查重，再生成内容完整、目标明确的提案；只有用户明确批准该具体提案后才能应用。修正后的新提案必须重新批准，Agent 不得直接编辑正式知识文件。
+
+终端维护命令不会自动继承 MCP 客户端配置里的环境变量。运行 `proposal-digest.mjs` 时要显式传入同一个 `AGENT_KNOWLEDGE_STATE_DIR`，并可用 `knowledge_schema` 返回的实际提案与锁目录核对是否一致。
 
 ## 8. Trust Core shadow / Trust Core 影子观测
 

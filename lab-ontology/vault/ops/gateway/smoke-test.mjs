@@ -184,6 +184,8 @@ try {
     || schema.retrieval_status?.policy?.fallback_backend !== "local_markdown_keyword"
     || schema.gateway_runtime?.trust_core?.mode !== "shadow"
     || schema.gateway_runtime?.trust_core?.enforced !== false
+    || schema.gateway_runtime?.proposal_state_root !== PROPOSAL_ROOT
+    || schema.gateway_runtime?.lock_root !== path.join(STATE_ROOT, "locks")
     || schema.navigation_index?.status !== "ready"
     || schema.navigation_index?.page_count !== 3) {
     throw new Error(`Unexpected runtime contract: ${JSON.stringify(schema)}`);
