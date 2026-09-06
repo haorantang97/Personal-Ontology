@@ -9,7 +9,7 @@ query → retrieve candidates → map to KnowledgeRecord → evaluateUse
       → allow / allow_with_limits / deny → Agent answer or action
 ```
 
-The retrieval engine can be a filesystem, Obsidian, SQL database, vector database, search service, or GBrain. It stays responsible for recall; this package is responsible only for declared use boundaries.
+The retrieval engine can be a filesystem, Obsidian, SQL database, vector database, or search service. It stays responsible for recall; this package is responsible only for declared use boundaries.
 
 ## SDK
 

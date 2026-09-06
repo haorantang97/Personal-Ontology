@@ -75,7 +75,7 @@ function contentFindings(relativePath: string, content: string): PrivacyFinding[
     {
       code: "PRIVATE_PROPOSAL_PATH",
       message: "Private proposal-queue paths must not be published",
-      pattern: /\.gbrain[\\/]change-proposals(?:[\\/]|\b)/
+      pattern: /\.agent-knowledge[\\/]change-proposals(?:[\\/]|\b)/
     },
     {
       code: "PRIVATE_KEY_MATERIAL",
