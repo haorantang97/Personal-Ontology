@@ -35,8 +35,6 @@ jobs:
     strategy:
       matrix:
         node-version: [20, 24]
-    env:
-      VAULT_DIR: ${{ runner.temp }}/lab-ontology-vault
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,6 +42,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
           cache-dependency-path: lab-ontology/vault/ops/gateway/package-lock.json
+      - name: Configure the isolated Vault path
+        run: echo "VAULT_DIR=$RUNNER_TEMP/lab-ontology-vault" >> "$GITHUB_ENV"
       - name: Create an independent Git Vault fixture
         run: |
           mkdir -p "$VAULT_DIR"
@@ -62,9 +62,8 @@ jobs:
       - name: Vault validation
         run: node "$VAULT_DIR/ops/validate-vault.mjs"
       - name: Gateway boots with the exact 13-tool surface
-        env:
-          AGENT_KNOWLEDGE_STATE_DIR: ${{ runner.temp }}/agent-knowledge-ci
         run: |
+          export AGENT_KNOWLEDGE_STATE_DIR="$RUNNER_TEMP/agent-knowledge-ci"
           cd "$VAULT_DIR/ops/gateway"
           node --input-type=module -e '
             import { Client } from "@modelcontextprotocol/sdk/client/index.js";
