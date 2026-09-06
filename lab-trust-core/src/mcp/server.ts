@@ -16,7 +16,7 @@ import {
 export function createTrustMcpServer(options: TrustToolHandlerOptions = {}): McpServer {
   const server = new McpServer({
     name: "lab-trust-core",
-    version: "0.1.1"
+    version: "0.1.2"
   });
   const handlers = createTrustToolHandlers(options);
 

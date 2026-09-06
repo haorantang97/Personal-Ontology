@@ -47,6 +47,13 @@ function pathFindings(relativePath: string): PrivacyFinding[] {
       message: "Private Vault directories must not be included in the public package"
     });
   }
+  if (/(?:^|\/)\.agent-knowledge\/proposals(?:\/|$)/.test(normalized.toLowerCase())) {
+    findings.push({
+      code: "PRIVATE_PROPOSAL_PATH",
+      path: normalized,
+      message: "Private proposal-state files must not be included in the public package"
+    });
+  }
   if (
     segments.some(
       (segment) =>
@@ -75,7 +82,7 @@ function contentFindings(relativePath: string, content: string): PrivacyFinding[
     {
       code: "PRIVATE_PROPOSAL_PATH",
       message: "Private proposal-queue paths must not be published",
-      pattern: /\.agent-knowledge[\\/]change-proposals(?:[\\/]|\b)/
+      pattern: /\.agent-knowledge[\\/]proposals(?:[\\/]|\b)/
     },
     {
       code: "PRIVATE_KEY_MATERIAL",
