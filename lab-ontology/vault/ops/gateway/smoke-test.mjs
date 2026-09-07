@@ -241,6 +241,7 @@ try {
   if (trustRead.page?.slug !== SOURCE_SLUG
     || trustRead.trust_shadow?.mode !== "shadow"
     || trustRead.trust_shadow?.enforced !== false
+    || trustRead.trust_shadow?.blocking !== false
     || trustRead.trust_shadow?.status !== "evaluated"
     || trustRead.trust_shadow?.engine?.policy_id !== "knowledge-trust-default"
     || trustRead.trust_shadow?.verdict?.decision !== "deny") {
@@ -256,6 +257,35 @@ try {
   }
 
   const methodBytes = readFileSync(path.join(FIXTURE_ROOT, METHOD_PATH), "utf8");
+  const pendingBeforeInvalid = payload(await client.callTool({
+    name: "knowledge_list_proposals",
+    arguments: {},
+  })).proposals.length;
+  const invalidProposalResponse = await client.callTool({
+    name: "knowledge_propose_changes",
+    arguments: {
+      summary: "Synthetic invalid proposal preflight",
+      rationale: "Verify invalid candidate bytes never reach the approval queue.",
+      origin: "background",
+      proposed_by: "gateway-smoke-test",
+      changes: [{
+        action: "update",
+        target: METHOD_PATH,
+        content: "---\ntype: methodology\ntitle: Broken\ntags: [broken\n---\n# Broken\n",
+      }],
+    },
+  });
+  const invalidProposal = payload(invalidProposalResponse);
+  const pendingAfterInvalid = payload(await client.callTool({
+    name: "knowledge_list_proposals",
+    arguments: {},
+  })).proposals.length;
+  if (!invalidProposalResponse.isError
+    || invalidProposal.error_code !== "PROPOSAL_PREFLIGHT_FAILED"
+    || invalidProposal.stage !== "proposal_preflight"
+    || pendingAfterInvalid !== pendingBeforeInvalid) {
+    throw new Error(`Invalid proposal reached the queue or lost its diagnostic: ${JSON.stringify(invalidProposal)}`);
+  }
   const proposed = payload(await client.callTool({
     name: "knowledge_propose_changes",
     arguments: {
@@ -269,6 +299,12 @@ try {
   const pendingPath = proposalStatePath("pending", proposed.proposal_id);
   if (proposed.knowledge_modified !== false || !existsSync(pendingPath)) {
     throw new Error("Proposal creation changed knowledge or did not persist the proposal.");
+  }
+  if (proposed.preflight?.status !== "passed"
+    || proposed.preflight?.scope !== "exact_candidate_tree"
+    || proposed.preflight?.gateway_version !== "1.8.0"
+    || proposed.preflight?.base_commit !== currentCommit) {
+    throw new Error(`Proposal did not return its exact candidate preflight receipt: ${JSON.stringify(proposed.preflight)}`);
   }
   const exact = payload(await client.callTool({
     name: "knowledge_get_proposal",
@@ -317,9 +353,11 @@ try {
     },
     trust_shadow: {
       mode: trustRead.trust_shadow.mode,
+      blocking: trustRead.trust_shadow.blocking,
       enforced: trustRead.trust_shadow.enforced,
       status: trustRead.trust_shadow.status,
     },
+    proposal_preflight_before_queue: "passed",
     proposal_gate: "passed",
   }, null, 2));
 } finally {

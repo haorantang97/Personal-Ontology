@@ -50,6 +50,7 @@ function summarize(record) {
     context: proposal.context ?? null,
     summary: proposal.summary,
     rationale: proposal.rationale,
+    preflight: proposal.preflight ?? null,
     change_count: proposal.changes.length,
     changes: proposal.changes.map((change) => ({
       action: change.action,
@@ -68,6 +69,7 @@ function renderDigest(proposals) {
       "",
       `[${proposal.id}] ${proposal.summary}`,
       `origin=${proposal.origin} proposed_by=${proposal.proposed_by ?? "unknown"} created_at=${proposal.created_at}`,
+      `preflight=${proposal.preflight?.status ?? "legacy_unrecorded"}`,
       proposal.rationale,
     );
     for (const change of proposal.changes) {

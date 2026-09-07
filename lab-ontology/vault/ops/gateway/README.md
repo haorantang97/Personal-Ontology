@@ -74,11 +74,26 @@ the caller explicitly asks for all canonical pages.
 
 1. `knowledge_intake`
 2. result/evidence dedupe searches
-3. `knowledge_propose_changes` with complete target bytes
+3. `knowledge_propose_changes` with complete target bytes; the gateway builds an
+   isolated exact candidate tree and runs Vault/schema/gateway preflight before
+   writing a pending proposal
 4. exact user approval
 5. `knowledge_apply_proposal`
-6. Vault validation, isolated proposal validation, Git commit, Native sync,
+6. repeated stale-content and candidate validation, Git commit, Native sync,
    exact corpus verification, and deterministic navigation-index refresh
+
+If proposal preflight fails, no pending proposal is created. The tool returns
+`error_code: PROPOSAL_PREFLIGHT_FAILED` and `stage: proposal_preflight` together
+with the validator output. This prevents a user from approving bytes that can
+only fail later during apply.
+
+The frontmatter validator accepts both YAML flow lists and ordinary block lists.
+`project_status` carries project lifecycle independently of the record-level
+`status`; `agent_priority` is independent of evidence `maturity`.
+
+Lab Trust Core remains non-enforcing. Legacy pages missing only the newer trust
+contract are surfaced as `legacy_migration_warning` / `legacy_unmigrated` with
+`blocking: false`, not as a write-validator failure.
 
 If step 6 commits Markdown but index publication fails, call
 `knowledge_repair_index`. Repair never edits Markdown or Git and needs no new

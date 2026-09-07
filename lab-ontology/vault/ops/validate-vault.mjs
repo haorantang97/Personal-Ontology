@@ -3,6 +3,7 @@
 import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseKnowledgeMarkdown } from "./gateway/knowledge-catalog.mjs";
 import { readSchemaPack } from "./gateway/schema-pack.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -12,6 +13,7 @@ const TYPE_BY_DIR = new Map(PACK.page_types.flatMap((entry) =>
 const TYPE_RULES = new Map(PACK.page_types.map((entry) => [entry.name, entry]));
 const RESULT_TYPES = new Set(PACK.page_types.filter((entry) => entry.retrieval_scope === "result").map((entry) => entry.name));
 const COMMON_FIELDS = PACK.common_fields;
+const PROJECT_STATUSES = new Set(["active", "paused", "completed", "cancelled", "archived"]);
 const LEGACY_PATHS = [".llm-wiki", "wiki", "raw", "purpose.md", "schema.md"];
 const allowLegacy = process.argv.includes("--allow-legacy");
 const errors = [];
@@ -20,78 +22,39 @@ let plainRelationReferences = 0;
 let obsidianRelationReferences = 0;
 
 function parseFrontmatter(text, relativePath) {
-  const lines = text.replaceAll("\r\n", "\n").split("\n");
-  if (lines[0] !== "---") {
-    errors.push(`${relativePath}: missing YAML frontmatter`);
+  try {
+    const parsed = parseKnowledgeMarkdown(text, {
+      strict: true,
+      preservePlainDates: true,
+      sourceLabel: relativePath,
+    });
+    return { fields: new Map(Object.entries(parsed.frontmatter)), body: parsed.body };
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : `${relativePath}: invalid YAML frontmatter`);
     return { fields: new Map(), body: text };
   }
-
-  const closing = lines.indexOf("---", 1);
-  if (closing === -1) {
-    errors.push(`${relativePath}: unclosed YAML frontmatter`);
-    return { fields: new Map(), body: text };
-  }
-
-  const fields = new Map();
-  for (const line of lines.slice(1, closing)) {
-    const match = line.match(/^([A-Za-z][A-Za-z0-9_-]*):(?:\s*(.*))?$/);
-    if (match) fields.set(match[1], (match[2] ?? "").trim());
-  }
-  return { fields, body: lines.slice(closing + 1).join("\n") };
 }
 
 function scalar(raw = "") {
-  const value = raw.trim();
-  if (
-    value.length >= 2 &&
-    ((value.startsWith("\"") && value.endsWith("\"")) ||
-      (value.startsWith("'") && value.endsWith("'")))
-  ) {
-    return value.slice(1, -1);
-  }
-  return value;
+  if (raw === null || raw === undefined || Array.isArray(raw)) return "";
+  return String(raw).trim();
 }
 
-function inlineList(raw = "", label = "") {
-  const value = raw.trim();
-  if (!value.startsWith("[") || !value.endsWith("]")) {
-    errors.push(`${label}: expected an inline list`);
+function listValue(raw = "", label = "") {
+  if (!Array.isArray(raw)) {
+    errors.push(`${label}: expected a YAML list`);
     return [];
   }
-
-  const inner = value.slice(1, -1).trim();
-  if (!inner) return [];
-
-  const items = [];
-  let buffer = "";
-  let quote = "";
-  let escaped = false;
-  for (const character of inner) {
-    if (escaped) {
-      buffer += character;
-      escaped = false;
+  const values = [];
+  for (const item of raw) {
+    if (typeof item !== "string" && typeof item !== "number" && typeof item !== "boolean") {
+      errors.push(`${label}: list entries must be scalar values`);
       continue;
     }
-    if (character === "\\" && quote) {
-      buffer += character;
-      escaped = true;
-      continue;
-    }
-    if ((character === "\"" || character === "'") && (!quote || quote === character)) {
-      quote = quote ? "" : character;
-      buffer += character;
-      continue;
-    }
-    if (character === "," && !quote) {
-      items.push(scalar(buffer));
-      buffer = "";
-      continue;
-    }
-    buffer += character;
+    const value = String(item).trim();
+    if (value) values.push(value);
   }
-  if (quote) errors.push(`${label}: unclosed quote in inline list`);
-  items.push(scalar(buffer));
-  return items.map((item) => item.trim()).filter(Boolean);
+  return values;
 }
 
 function isObsidianRelationReference(reference = "") {
@@ -106,12 +69,36 @@ function normalizeRelationReference(reference = "") {
 }
 
 function relationList(raw = "", label = "") {
-  const references = inlineList(raw, label);
+  const references = listValue(raw, label);
   for (const reference of references) {
     if (isObsidianRelationReference(reference)) obsidianRelationReferences += 1;
     else plainRelationReferences += 1;
   }
   return references.map(normalizeRelationReference);
+}
+
+function hasValue(value) {
+  if (Array.isArray(value)) return true;
+  return scalar(value).length > 0;
+}
+
+function markdownOutsideFences(body = "") {
+  let fenced = false;
+  let marker = "";
+  return String(body).split("\n").map((line) => {
+    const fence = line.match(/^\s*(```+|~~~+)/);
+    if (fence) {
+      if (!fenced) {
+        fenced = true;
+        marker = fence[1][0];
+      } else if (fence[1][0] === marker) {
+        fenced = false;
+        marker = "";
+      }
+      return "";
+    }
+    return fenced ? "" : line;
+  }).join("\n");
 }
 
 async function markdownFiles(directory) {
@@ -174,7 +161,7 @@ for (const relativePath of relativeFiles.sort()) {
   const slug = path.basename(relativePath, ".md");
 
   for (const field of COMMON_FIELDS) {
-    if (!fields.has(field) || !fields.get(field).trim()) {
+    if (!fields.has(field) || !hasValue(fields.get(field))) {
       errors.push(`${relativePath}: missing required field '${field}'`);
     }
   }
@@ -201,19 +188,15 @@ for (const relativePath of relativeFiles.sort()) {
   const derivedPages = fields.has("derived_pages")
     ? relationList(fields.get("derived_pages"), `${relativePath}: derived_pages`)
     : [];
-  const aliases = inlineList(fields.get("aliases"), `${relativePath}: aliases`);
-  inlineList(fields.get("tags"), `${relativePath}: tags`);
+  const aliases = listValue(fields.get("aliases"), `${relativePath}: aliases`);
+  listValue(fields.get("tags"), `${relativePath}: tags`);
   if (fields.has("modules")) {
-    inlineList(fields.get("modules"), `${relativePath}: modules`);
+    listValue(fields.get("modules"), `${relativePath}: modules`);
   }
   const maturity = scalar(fields.get("maturity"));
   if (maturity && !PACK.enums.maturity.includes(maturity)) {
     errors.push(`${relativePath}: invalid maturity '${maturity}'`);
   }
-  if (maturity === "seed" && scalar(fields.get("agent_priority")) === "high") {
-    errors.push(`${relativePath}: maturity 'seed' cannot use agent_priority 'high'`);
-  }
-
   const typeRule = TYPE_RULES.get(actualType);
   if (typeRule) {
     for (const field of typeRule.required_fields) {
@@ -235,7 +218,13 @@ for (const relativePath of relativeFiles.sort()) {
       errors.push(`${relativePath}: invalid provenance_class '${provenanceClass}'`);
     }
     for (const field of ["raw_refs", "allowed_uses", "disallowed_uses"]) {
-      if (fields.has(field)) inlineList(fields.get(field), `${relativePath}: ${field}`);
+      if (fields.has(field)) listValue(fields.get(field), `${relativePath}: ${field}`);
+    }
+  }
+  if (actualType === "project" && fields.has("project_status")) {
+    const projectStatus = scalar(fields.get("project_status"));
+    if (!PROJECT_STATUSES.has(projectStatus)) {
+      errors.push(`${relativePath}: invalid project_status '${projectStatus}'`);
     }
   }
   if (actualType === "decision" && fields.has("decision_status")) {
@@ -326,7 +315,7 @@ for (const page of pages) {
     }
   }
 
-  for (const match of page.body.matchAll(/\[\[([^\]]+)\]\]/g)) {
+  for (const match of markdownOutsideFences(page.body).matchAll(/\[\[([^\]]+)\]\]/g)) {
     const reference = match[1];
     if (!resolveReference(reference) && !resolvesRawReference(reference)) {
       errors.push(`${page.relativePath}: unresolved wikilink '[[${reference}]]'`);
@@ -334,14 +323,14 @@ for (const page of pages) {
   }
 
   if (page.type === "source" && page.fields.has("sources")) {
-    for (const source of inlineList(page.fields.get("sources"), `${page.relativePath}: sources`)) {
+    for (const source of listValue(page.fields.get("sources"), `${page.relativePath}: sources`)) {
       if (source.startsWith(".raw/") && !(await exists(source))) {
         errors.push(`${page.relativePath}: missing raw source '${source}'`);
       }
     }
   }
   if (page.type === "source" && page.fields.has("raw_refs")) {
-    for (const source of inlineList(page.fields.get("raw_refs"), `${page.relativePath}: raw_refs`)) {
+    for (const source of listValue(page.fields.get("raw_refs"), `${page.relativePath}: raw_refs`)) {
       if (source.startsWith(".raw/") && !(await exists(source))) {
         errors.push(`${page.relativePath}: missing raw reference '${source}'`);
       }

@@ -60,6 +60,16 @@ maturity:
 
 结果页还包含 `related` 和 `evidence`；Project 继续包含 `last_confirmed`。
 
+Project 可选使用独立生命周期字段：
+
+```yaml
+project_status: active # active / paused / completed / cancelled / archived
+```
+
+通用 `status` 表示这张知识记录是否处于正式可检索状态，不表示项目是否暂停或完成。项目生命周期写入 `project_status` 或正文当前状态；不得为了表达暂停而把通用 `status` 改成非 Schema 值。历史 Project 不强制批量补字段，在下次实质更新时补齐。
+
+`agent_priority` 表示检索和阅读优先级，`maturity` 表示证据成熟度，两者独立。高相关但证据较弱的页面可以是 `agent_priority: high` 与 `maturity: seed`；它仍受 seed 的用途限制，不得因高优先级升级为事实。
+
 Source 包含：
 
 ```yaml
@@ -162,13 +172,19 @@ Project 以及其他明确维护当前状态的页面属于活页面，可以在
 
 ### 关系字段的存储格式
 
-`related`、`evidence`、`derived_pages` 的非空值必须保存为带引号的 Obsidian
-内部链接，优先使用从 Vault 根目录开始的完整路径。空关系继续写成 `[]`：
+`aliases`、`tags`、`modules`、`related`、`evidence`、`derived_pages`、`raw_refs`、`allowed_uses`、`disallowed_uses` 等列表字段同时接受 YAML flow list（`[]`）和普通 block list（逐行 `-`）。非空关系值必须是带引号的 Obsidian 内部链接，优先使用从 Vault 根目录开始的完整路径。空关系继续写成 `[]`：
 
 ```yaml
 related: ["[[projects/example-service-pilot]]"]
 evidence: ["[[sources/example-pilot-interviews]]"]
 derived_pages: ["[[methods/example-pilot-review-method]]"]
+```
+
+以下 block list 与上面的 flow list 等价：
+
+```yaml
+related:
+  - "[[projects/example-service-pilot]]"
 ```
 
 Markdown/Git 中的内部链接是关系事实源。提交绑定的 `KnowledgeCatalog` 会把

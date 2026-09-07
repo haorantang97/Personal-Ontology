@@ -775,7 +775,9 @@ function shadowBase(context, overrides = {}) {
     contract_version: "1",
     mode: "shadow",
     enforced: false,
+    blocking: false,
     status: "unavailable",
+    classification: "runtime_diagnostic",
     engine: {
       ...TRUST_CORE_RELEASE,
       policy_id: null,
@@ -799,6 +801,10 @@ function shadowBase(context, overrides = {}) {
     issues_truncated: boundedIssueList.truncated,
     ...rest,
   };
+}
+
+function legacyMigrationOnly(issues = []) {
+  return issues.length > 0 && issues.every((issue) => /^MISSING_/.test(String(issue?.code || "")));
 }
 
 function sha256(value) {
@@ -884,8 +890,11 @@ export async function observeKnowledgeTrustShadow({
   try {
     const parsed = core.parseKnowledgeMarkdown(markdown, { path });
     if (!parsed.ok) {
+      const migrationOnly = legacyMigrationOnly(parsed.issues);
       return shadowBase(context, {
         status: "invalid_record",
+        classification: migrationOnly ? "legacy_migration_warning" : "record_diagnostic",
+        migration_status: migrationOnly ? "legacy_unmigrated" : "invalid_record",
         engine,
         context_source: normalizedContext.source,
         issues: parsed.issues,
