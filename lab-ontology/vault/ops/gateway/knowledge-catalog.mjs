@@ -112,9 +112,13 @@ function unquote(value) {
   }
 }
 
-function splitInlineList(value) {
+function splitInlineList(value, { strict = false, label = "frontmatter value", preservePlainDates = false } = {}) {
   const text = String(value ?? "").trim();
-  if (!text.startsWith("[") || !text.endsWith("]")) return null;
+  if (!text.startsWith("[") && !text.endsWith("]")) return null;
+  if (!text.startsWith("[") || !text.endsWith("]")) {
+    if (strict) throw new Error(`${label}: malformed inline list`);
+    return null;
+  }
   const inner = text.slice(1, -1).trim();
   if (!inner) return [];
   const values = [];
@@ -145,14 +149,21 @@ function splitInlineList(value) {
       buffer += character;
     }
   }
-  if (quote || bracketDepth !== 0) return null;
+  if (quote || bracketDepth !== 0) {
+    if (strict) throw new Error(`${label}: malformed inline list`);
+    return null;
+  }
   values.push(buffer.trim());
-  return values.filter(Boolean).map(parseScalar);
+  return values.filter(Boolean).map((entry) => parseScalar(entry, {
+    strict,
+    label,
+    preservePlainDates,
+  }));
 }
 
-function parseScalar(value) {
+function parseScalar(value, { strict = false, label = "frontmatter value", preservePlainDates = false } = {}) {
   const text = String(value ?? "").trim();
-  const inlineList = splitInlineList(text);
+  const inlineList = splitInlineList(text, { strict, label, preservePlainDates });
   if (inlineList) return inlineList;
   if (text === "true") return true;
   if (text === "false") return false;
@@ -161,7 +172,7 @@ function parseScalar(value) {
   // Keep the former YAML provider's public frontmatter shape: an unquoted
   // YAML date was decoded as a Date and then JSON-serialized to ISO, while a
   // deliberately quoted date remained a string.
-  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+  if (!preservePlainDates && /^\d{4}-\d{2}-\d{2}$/.test(text)) {
     const timestamp = Date.parse(`${text}T00:00:00.000Z`);
     const iso = Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
     if (iso?.startsWith(text)) return iso;
@@ -169,27 +180,44 @@ function parseScalar(value) {
   return unquote(text);
 }
 
-export function parseKnowledgeMarkdown(markdown) {
+export function parseKnowledgeMarkdown(markdown, {
+  strict = false,
+  preservePlainDates = false,
+  sourceLabel = "knowledge page",
+} = {}) {
   const normalized = String(markdown).replaceAll("\r\n", "\n");
   const lines = normalized.split("\n");
   if (lines[0] !== "---") {
-    const body = splitKnowledgeBody(normalized.trim());
-    return { frontmatter: {}, content: body.compiled_truth, timeline: body.timeline };
+    if (strict) throw new Error(`${sourceLabel}: missing YAML frontmatter`);
+    const markdownBody = normalized.trim();
+    const body = splitKnowledgeBody(markdownBody);
+    return { frontmatter: {}, body: markdownBody, content: body.compiled_truth, timeline: body.timeline };
   }
   const closing = lines.indexOf("---", 1);
   if (closing < 0) {
-    const body = splitKnowledgeBody(normalized.trim());
-    return { frontmatter: {}, content: body.compiled_truth, timeline: body.timeline };
+    if (strict) throw new Error(`${sourceLabel}: unclosed YAML frontmatter`);
+    const markdownBody = normalized.trim();
+    const body = splitKnowledgeBody(markdownBody);
+    return { frontmatter: {}, body: markdownBody, content: body.compiled_truth, timeline: body.timeline };
   }
 
   const frontmatter = {};
   let activeList = null;
-  for (const line of lines.slice(1, closing)) {
+  for (const [offset, line] of lines.slice(1, closing).entries()) {
+    const lineNumber = offset + 2;
+    if (!line.trim() || /^\s*#/.test(line)) continue;
     const field = line.match(/^([A-Za-z][A-Za-z0-9_-]*):(?:\s*(.*))?$/);
     if (field) {
       const [, key, raw = ""] = field;
+      if (strict && Object.hasOwn(frontmatter, key)) {
+        throw new Error(`${sourceLabel}:${lineNumber}: duplicate frontmatter field '${key}'`);
+      }
       if (raw.trim()) {
-        frontmatter[key] = parseScalar(raw);
+        frontmatter[key] = parseScalar(raw, {
+          strict,
+          label: `${sourceLabel}:${lineNumber}:${key}`,
+          preservePlainDates,
+        });
         activeList = null;
       } else {
         frontmatter[key] = [];
@@ -198,10 +226,21 @@ export function parseKnowledgeMarkdown(markdown) {
       continue;
     }
     const item = activeList ? line.match(/^\s+-\s+(.+)$/) : null;
-    if (item) frontmatter[activeList].push(parseScalar(item[1]));
+    if (item) {
+      frontmatter[activeList].push(parseScalar(item[1], {
+        strict,
+        label: `${sourceLabel}:${lineNumber}:${activeList}`,
+        preservePlainDates,
+      }));
+      continue;
+    }
+    if (strict) {
+      throw new Error(`${sourceLabel}:${lineNumber}: unsupported or malformed YAML frontmatter`);
+    }
   }
-  const body = splitKnowledgeBody(lines.slice(closing + 1).join("\n").trim());
-  return { frontmatter, content: body.compiled_truth, timeline: body.timeline };
+  const markdownBody = lines.slice(closing + 1).join("\n").trim();
+  const body = splitKnowledgeBody(markdownBody);
+  return { frontmatter, body: markdownBody, content: body.compiled_truth, timeline: body.timeline };
 }
 
 // Preserve the public get_page contract that the previous derived-index

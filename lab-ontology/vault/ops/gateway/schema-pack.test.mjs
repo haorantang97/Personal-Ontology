@@ -168,6 +168,8 @@ test("vault validator derives canonical contracts and tolerates absent empty Git
   const root = fixture(t);
   writeFileSync(path.join(root, "ops/validate-vault.mjs"), readFileSync(new URL("../validate-vault.mjs", import.meta.url)));
   writeFileSync(path.join(root, "ops/gateway/schema-pack.mjs"), readFileSync(new URL("./schema-pack.mjs", import.meta.url)));
+  writeFileSync(path.join(root, "ops/gateway/knowledge-catalog.mjs"), readFileSync(new URL("./knowledge-catalog.mjs", import.meta.url)));
+  writeFileSync(path.join(root, "ops/gateway/knowledge-router.mjs"), readFileSync(new URL("./knowledge-router.mjs", import.meta.url)));
   const pack = canonical();
   const project = pack.page_types.find((entry) => entry.name === "project");
   project.path_prefixes = ["work/"];
@@ -177,24 +179,29 @@ test("vault validator derives canonical contracts and tolerates absent empty Git
   pack.filing_rules[0].directory = "work/";
   pack.filing_rules[0].examples = ["work/example"];
   pack.common_fields.push("owner");
-  pack.enums.agent_priority = ["custom_priority"];
+  pack.enums.agent_priority = ["custom_priority", "high"];
   writeFileSync(path.join(root, CANONICAL_PACK_PATH), JSON.stringify(pack));
   for (const entry of pack.page_types) for (const prefix of entry.path_prefixes) mkdirSync(path.join(root, prefix), { recursive: true });
   mkdirSync(path.join(root, ".raw"));
   rmSync(path.join(root, "decisions"), { recursive: true });
   rmSync(path.join(root, ".raw"), { recursive: true });
-  const page = `---\ntype: project\ntitle: Example\naliases: []\ntags: []\ncreated: 2030-01-01\nupdated: 2030-01-01\nstatus: reviewed\nretrieval_scope: evidence\nagent_priority: custom_priority\ndomain: testing\nevidence_status: confirmed\nowner: user\nrelated: []\nevidence: []\nlast_confirmed: 2030-01-01\napproved_marker: yes\n---\n# Example\n`;
+  const page = `---\ntype: project\ntitle: Example\naliases:\n  - Project Example\ntags:\n  - test\ncreated: 2030-01-01\nupdated: 2030-01-01\nstatus: reviewed\nproject_status: paused\nretrieval_scope: evidence\nagent_priority: custom_priority\ndomain: testing\nevidence_status: confirmed\nmaturity: seed\nowner: user\nrelated: []\nevidence: []\nlast_confirmed: 2030-01-01\napproved_marker: yes\n---\n# Example\n\n\`\`\`markdown\n[[intentionally-missing-example]]\n\`\`\`\n`;
   const run = (body) => {
     writeFileSync(path.join(root, "work/example.md"), body);
     return execFileSync(process.execPath, ["ops/validate-vault.mjs"], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   };
   assert.match(run(page), /Vault valid: 1 active pages/);
+  assert.match(
+    run(page.replace("agent_priority: custom_priority", "agent_priority: high")),
+    /Vault valid: 1 active pages/,
+  );
   for (const [from, to, expected] of [
     ["approved_marker: yes\n", "", /approved_marker/],
     ["owner: user\n", "", /owner/],
     ["status: reviewed", "status: active", /status must be 'reviewed'/],
     ["retrieval_scope: evidence", "retrieval_scope: result", /retrieval_scope must be 'evidence'/],
     ["agent_priority: custom_priority", "agent_priority: normal", /invalid agent_priority/],
+    ["project_status: paused", "project_status: sleeping", /invalid project_status/],
   ]) {
     assert.throws(() => run(page.replace(from, to)), (error) => expected.test(error.stderr));
   }

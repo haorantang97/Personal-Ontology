@@ -51,11 +51,18 @@ Pages are classified by future Agent use, not author, platform or topic. `module
 
 Vector similarity can rank candidates but cannot alone trigger `action: read`. `action: review` is a weak-candidate signal, not permission to treat a title or summary as fact. Exact page reads and contract reads do not depend on a healthy vector service.
 
+`knowledge_propose_changes` now validates the complete candidate tree before it
+creates a pending proposal. Invalid Markdown, schema, relationships or gateway
+changes return a structured `proposal_preflight` error and never enter the
+approval queue. Both YAML flow lists and ordinary block lists are accepted.
+Project lifecycle uses optional `project_status`; record availability remains in
+`status`. Evidence `maturity` and retrieval `agent_priority` are independent.
+
 ## Trust Core shadow / Trust Core 影子观测
 
 Agent Knowledge 1.8.0 pins the public `lab-trust-core` release in its lockfile. After an allowed `knowledge_get`, the gateway can attach a bounded `trust_shadow` diagnostic to the returned committed record.
 
-This is deliberately **non-enforcing** in 1.8.0. Trust Core cannot block a read, change a router action, upgrade maturity, authorize a write or make the gateway unavailable. An unavailable or incompatible core is reported as a diagnostic. The standalone Trust Core can still be used independently outside `lab-ontology`.
+This is deliberately **non-enforcing** in 1.8.0. Trust Core cannot block a read, change a router action, upgrade maturity, authorize a write or make the gateway unavailable. A legacy page that only lacks the newer trust fields is labeled `legacy_migration_warning` / `legacy_unmigrated` with `blocking: false`; it is not a write failure and does not mean the content is false. An unavailable or incompatible core is reported as a diagnostic. The standalone Trust Core can still be used independently outside `lab-ontology`.
 
 ## Install / 安装
 
@@ -204,4 +211,4 @@ Remove the `agent-knowledge` MCP entry. Back up any personal content before dele
 
 This module uses the repository's [PolyForm Noncommercial License 1.0.0](LICENSE.md). The separately packaged `lab-trust-core` dependency retains its MIT license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-`vault/ops/` is the Agent Knowledge 1.8.0 Native-only reference implementation published with neutral fixtures. The public boundary intentionally omits personal pages, paths, query cases, proposal history and runtime state.
+`vault/ops/` is the Agent Knowledge 1.8.0 Native-only reference implementation published with neutral fixtures. Its proposal-time preflight, YAML list handling, lifecycle/priority semantics and Trust Core migration diagnostics are synchronized with the working Vault. The public copy retains neutral example paths, synthetic smoke cases, configurable runtime-state locations and the public Trust Core 0.1.2 lock; it intentionally omits personal pages, paths, query cases, proposal history and runtime state.

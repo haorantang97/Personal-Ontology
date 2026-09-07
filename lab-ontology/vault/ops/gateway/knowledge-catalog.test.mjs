@@ -372,6 +372,35 @@ test("frontmatter parser preserves inline arrays and body", () => {
   assert.equal(parsed.timeline, "");
 });
 
+test("frontmatter parser accepts normal YAML block lists", () => {
+  const parsed = parseKnowledgeMarkdown(`---
+title: Test
+aliases:
+  - First alias
+  - "Second alias"
+related:
+  - "[[methods/alpha]]"
+updated: 2026-09-08
+---
+# Body
+`, { strict: true, preservePlainDates: true, sourceLabel: "methods/test.md" });
+  assert.deepEqual(parsed.frontmatter.aliases, ["First alias", "Second alias"]);
+  assert.deepEqual(parsed.frontmatter.related, ["[[methods/alpha]]"]);
+  assert.equal(parsed.frontmatter.updated, "2026-09-08");
+  assert.equal(parsed.body, "# Body");
+});
+
+test("strict frontmatter parser rejects malformed lists and duplicate fields", () => {
+  assert.throws(
+    () => parseKnowledgeMarkdown("---\ntags: [one, two\n---\n# Body\n", { strict: true, sourceLabel: "bad.md" }),
+    /bad\.md:2:tags: malformed inline list/,
+  );
+  assert.throws(
+    () => parseKnowledgeMarkdown("---\ntitle: One\ntitle: Two\n---\n# Body\n", { strict: true, sourceLabel: "bad.md" }),
+    /duplicate frontmatter field 'title'/,
+  );
+});
+
 test("body parser preserves the provider-compatible timeline string contract", () => {
   assert.deepEqual(splitKnowledgeBody("# Body\n\n---\n\nParagraph"), {
     compiled_truth: "# Body\n\n---\n\nParagraph",

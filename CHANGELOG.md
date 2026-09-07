@@ -25,6 +25,10 @@ tags (`vX.Y.Z`). Module-internal versions are noted in the entries.
 
 ### Changed
 
+- `lab-ontology` schema pack 1.2.0 moves exact candidate validation to proposal
+  creation, accepts YAML flow and block lists, separates optional project
+  lifecycle from record status, decouples retrieval priority from evidence
+  maturity, and labels legacy Trust Core gaps as non-blocking migration warnings.
 - `lab-knowledge-retrospective` now separates concise conclusion reviews from
   forensic reviews of failed, long or cross-task work. Forensic mode audits raw
   turns and completion claims, tracks corrections and open loops, and reports

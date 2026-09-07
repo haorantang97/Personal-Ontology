@@ -951,6 +951,9 @@ test("trust shadow exposes invalid legacy contracts without guessing maturity", 
   });
 
   assert.equal(shadow.status, "invalid_record");
+  assert.equal(shadow.blocking, false);
+  assert.equal(shadow.classification, "legacy_migration_warning");
+  assert.equal(shadow.migration_status, "legacy_unmigrated");
   assert.equal(shadow.verdict, null);
   assert.ok(shadow.issues.some((issue) => issue.code === "MISSING_MATURITY"));
   assert.ok(shadow.issues.some((issue) => issue.code === "MISSING_CLAIMS_SECTION"));

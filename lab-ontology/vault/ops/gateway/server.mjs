@@ -212,7 +212,13 @@ function result(data, isError = false) {
 
 function errorResult(error) {
   const message = error instanceof Error ? error.message : String(error);
-  return result({ ok: false, error: message, ...(error?.retrieval ? { retrieval: error.retrieval } : {}) }, true);
+  return result({
+    ok: false,
+    error: message,
+    ...(typeof error?.code === "string" ? { error_code: error.code } : {}),
+    ...(typeof error?.stage === "string" ? { stage: error.stage } : {}),
+    ...(error?.retrieval ? { retrieval: error.retrieval } : {}),
+  }, true);
 }
 
 function committedCatalogAtHead(expectedCommit = null) {
@@ -512,8 +518,7 @@ function assertSnapshotsUnchanged(expected, current) {
   }
 }
 
-function captureProposalPreconditions(changes) {
-  const snapshots = snapshotTargets(changes);
+function captureProposalPreconditions(changes, snapshots = snapshotTargets(changes)) {
 
   for (const change of changes) {
     const source = snapshots.get(change.target);
@@ -950,16 +955,36 @@ function validateGatewayChanges(validationRoot, changes) {
   validateGatewayPackageIdentity(validationRoot);
 }
 
-function validateProposedChanges(changes, snapshots) {
+function validationFailureDetails(error) {
+  const stderr = Buffer.isBuffer(error?.stderr) ? error.stderr.toString("utf8") : error?.stderr;
+  const stdout = Buffer.isBuffer(error?.stdout) ? error.stdout.toString("utf8") : error?.stdout;
+  return [stderr, stdout, error instanceof Error ? error.message : String(error)]
+    .map((value) => String(value || "").trim())
+    .find(Boolean) || "Unknown validation failure";
+}
+
+function validateProposedChanges(changes, snapshots, { expectedCommit = null } = {}) {
   const head = run("git", ["rev-parse", "HEAD"]);
-  withRepositorySnapshot(ROOT, head, (validationRoot) => {
-    seedValidationWorktree(validationRoot, snapshots);
-    applyFileChanges(validationRoot, changes);
-    run(process.execPath, ["ops/validate-vault.mjs"], { cwd: validationRoot });
-    validateGatewayChanges(validationRoot, changes);
-    // Validate proposed bytes with the trusted, already-loaded validator.
-    validateSchemaChanges(validationRoot, changes);
-  });
+  if (expectedCommit && head !== expectedCommit) {
+    throw Object.assign(new Error("Knowledge repository HEAD changed before proposal preflight."), {
+      code: "PROPOSAL_BASE_COMMIT_CHANGED",
+      stage: "proposal_preflight",
+    });
+  }
+  try {
+    withRepositorySnapshot(ROOT, head, (validationRoot) => {
+      seedValidationWorktree(validationRoot, snapshots);
+      applyFileChanges(validationRoot, changes);
+      run(process.execPath, ["ops/validate-vault.mjs"], { cwd: validationRoot });
+      validateGatewayChanges(validationRoot, changes);
+      validateSchemaChanges(validationRoot, changes);
+    });
+  } catch (error) {
+    throw Object.assign(
+      new Error(`Proposal preflight failed before queueing:\n${validationFailureDetails(error)}`),
+      { code: "PROPOSAL_PREFLIGHT_FAILED", stage: "proposal_preflight" },
+    );
+  }
 }
 
 function validateActiveSchema(changes, snapshots) {
@@ -1088,7 +1113,7 @@ const server = new McpServer(
   },
   {
     instructions:
-      `This is the canonical interface for the user's Obsidian knowledge base at '${ROOT}'. When a request may depend on the user's projects, decisions, methods, preferences, local recommendations, or other durable personal context, call knowledge_route first and fetch any action='read' pages with knowledge_get before answering. When the user says "录入知识库", "导入知识库", "保存到知识库", or otherwise asks to add, update, merge, move, or delete knowledge, call knowledge_intake first. Do not ask the user for the vault path, Obsidian format, page type, or sync command: knowledge_intake supplies the active contract. Use result-scope search for reusable knowledge and evidence scope only for provenance. Never write files directly. Create an exact proposal, show it to the user, and call knowledge_apply_proposal only after explicit approval. If a proposal is stale, recreate and re-approve it. If an approved write reports a failed index or search is behind Git, call knowledge_repair_index; do not ask the user to run terminal commands.`,
+      `This is the canonical interface for the user's Obsidian knowledge base at '${ROOT}'. When a request may depend on the user's projects, decisions, methods, preferences, local recommendations, or other durable personal context, call knowledge_route first and fetch any action='read' pages with knowledge_get before answering. When the user says "录入知识库", "导入知识库", "保存到知识库", or otherwise asks to add, update, merge, move, or delete knowledge, call knowledge_intake first. Do not ask the user for the vault path, Obsidian format, page type, or sync command: knowledge_intake supplies the active contract. Use result-scope search for reusable knowledge and evidence scope only for provenance. Never write files directly. Create an exact proposal; the gateway preflights its exact candidate tree before queueing. Show a successful proposal to the user, and call knowledge_apply_proposal only after explicit approval. If preflight fails, no proposal exists: correct the candidate before presenting it. If a proposal is stale, recreate and re-approve it. If an approved write reports a failed index or search is behind Git, call knowledge_repair_index; do not ask the user to run terminal commands.`,
   },
 );
 
@@ -1128,7 +1153,7 @@ server.registerTool(
           "Call knowledge_search against result pages and, when provenance matters, evidence pages to avoid duplicates.",
           "Choose the page type by future Agent use, not by topic, author, platform, or file format.",
           "Prefer updating an existing page. Create a new page only when the existing pages cannot express the reusable result.",
-          "Draft complete target-file contents and call knowledge_propose_changes. Do not edit the vault directly.",
+          "Draft complete target-file contents and call knowledge_propose_changes. The gateway validates the exact isolated candidate before queueing; a preflight failure creates no proposal. Do not edit the vault directly.",
           "Show the exact proposal to the user and wait for explicit approval.",
           "After approval, call knowledge_apply_proposal. The gateway validates, commits to Git, synchronizes the Native derived index, and verifies exact Git corpus coverage.",
           "If indexing fails after the Git commit, call knowledge_repair_index. It repairs only the derived index and does not require another content proposal.",
@@ -1521,7 +1546,7 @@ server.registerTool(
         index_repair_policy:
           "If the derived index is behind Git or an approved write reports index_status='failed', call knowledge_repair_index. Do not ask the user to run terminal commands.",
         write_policy:
-          "Propose first. No knowledge mutation is permitted until the user explicitly approves the exact proposal in the current conversation.",
+          "Preflight the exact candidate at proposal time, then ask for approval. No knowledge mutation is permitted until the user explicitly approves that exact proposal in the current conversation.",
         classification:
           "Choose page type by future Agent use; use domain/tags/source_format/status for horizontal metadata.",
         gateway_runtime: {
@@ -1530,6 +1555,10 @@ server.registerTool(
           adopt_untracked_markdown_by_update: true,
           delete_root_obsidian_ui_artifacts_by_proposal: true,
           clean_worktree_validation_and_indexing: true,
+          proposal_time_exact_candidate_preflight: true,
+          yaml_flow_and_block_lists: true,
+          independent_project_lifecycle: true,
+          independent_maturity_and_priority: true,
           module_weighted_global_search: true,
           catalog_source: "committed Git objects at one immutable HEAD",
           direct_read_binding:
@@ -1602,7 +1631,7 @@ server.registerTool(
   "knowledge_propose_changes",
   {
     description:
-      "Create a pending knowledge-base proposal only. This does NOT modify Obsidian, Git, the retrieval index, or the schema. Conversation proposals are shown in the current conversation; background proposals stay in the shared approval inbox until a review task presents them.",
+      "Preflight an exact candidate tree and, only if it passes, create a pending knowledge-base proposal. This does NOT modify Obsidian, Git, the retrieval index, or the schema. A failed preflight creates no proposal and returns stage='proposal_preflight'. Conversation proposals are shown in the current conversation; background proposals stay in the shared approval inbox until a review task presents them.",
     inputSchema: {
       summary: z.string().min(3).max(300),
       rationale: z.string().min(3).max(2000),
@@ -1616,7 +1645,17 @@ server.registerTool(
   async ({ summary, rationale, changes, origin, proposed_by, context }) => {
     try {
       const normalizedChanges = validateChanges(changes);
-      const preconditions = captureProposalPreconditions(normalizedChanges);
+      const baseCommit = run("git", ["rev-parse", "HEAD"]);
+      const snapshots = snapshotTargets(normalizedChanges);
+      const preconditions = captureProposalPreconditions(normalizedChanges, snapshots);
+      validateProposedChanges(normalizedChanges, snapshots, { expectedCommit: baseCommit });
+      if (run("git", ["rev-parse", "HEAD"]) !== baseCommit) {
+        throw Object.assign(new Error("Knowledge repository HEAD changed during proposal preflight; retry from the new revision."), {
+          code: "PROPOSAL_BASE_COMMIT_CHANGED",
+          stage: "proposal_preflight",
+        });
+      }
+      assertSnapshotsUnchanged(snapshots, snapshotTargets(normalizedChanges));
       const now = new Date();
       const stamp = now.toISOString().replace(/\D/g, "").slice(0, 14);
       const id = `KB-${stamp.slice(0, 8)}-${stamp.slice(8)}-${randomBytes(4).toString("hex")}`;
@@ -1624,7 +1663,7 @@ server.registerTool(
         schema_version: 2,
         id,
         created_at: now.toISOString(),
-        base_commit: run("git", ["rev-parse", "HEAD"]),
+        base_commit: baseCommit,
         summary,
         rationale,
         origin: origin ?? "conversation",
@@ -1632,6 +1671,14 @@ server.registerTool(
         context: context?.trim() || null,
         changes: normalizedChanges,
         preconditions,
+        preflight: {
+          status: "passed",
+          stage: "proposal_preflight",
+          scope: "exact_candidate_tree",
+          gateway_version: GATEWAY_RUNTIME_VERSION,
+          base_commit: baseCommit,
+          validated_at: now.toISOString(),
+        },
       };
       const record = { proposal, sha256: proposalHash(proposal) };
       const finalPath = proposalPath(id);
@@ -1646,6 +1693,7 @@ server.registerTool(
         sha256: record.sha256,
         summary,
         change_count: normalizedChanges.length,
+        preflight: proposal.preflight,
         knowledge_modified: false,
         next_step: proposal.origin === "background"
           ? "Leave this proposal in the shared approval inbox. A dedicated review task will present its exact scope; do not apply it automatically."

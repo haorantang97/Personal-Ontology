@@ -1,8 +1,8 @@
 {
   "api_version": "agent-knowledge-schema-pack-v1",
   "name": "agent-decision-memory",
-  "version": "1.1.1",
-  "description": "Agent decision memory with Raw, candidate-evidence, reusable-result, and living-project layers; module-aware retrieval; durable decisions; source-family independence; periodic audits; and approval-gated multi-agent maintenance.",
+  "version": "1.2.0",
+  "description": "Agent decision memory with Raw, candidate-evidence, reusable-result, and living-project layers; module-aware retrieval; independent project lifecycle and retrieval priority; durable decisions; source-family independence; periodic audits; and approval-gated multi-agent maintenance.",
   "author": "Personal Ontology contributors",
   "page_types": [
     {
