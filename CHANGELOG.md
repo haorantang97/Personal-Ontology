@@ -25,6 +25,11 @@ tags (`vX.Y.Z`). Module-internal versions are noted in the entries.
 
 ### Changed
 
+- Complete public Skill naming in the catalogue integration design and plan,
+  including copyable directory examples. List the four current names in both
+  README introductions and clarify main-branch Skill installation versus
+  historical Trust Core release snapshots.
+
 - Rename the public Skills to `lab-wx-distillation` (formerly
   `lab-context-distillation-wx`), `lab-retrospective` (formerly
   `lab-knowledge-retrospective`) and `lab-intake` (formerly

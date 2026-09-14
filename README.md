@@ -19,7 +19,9 @@
 
 **让 AI Agent 长期、可追溯、经你批准地维护"关于你"的知识。**
 
-这是一个原创的个人本体工作台：一个完整知识系统（`lab-ontology`）、一个可独立使用的可信度核心（`lab-trust-core`），以及四个围绕知识流工作的 Skill。它解决的是 Agent 记忆的三个老问题——记得零散、来源不可追、还会在你不知情时被改写。这里的答案是三条立场：
+这是一个原创的个人本体工作台：一个完整知识系统（`lab-ontology`）、一个可独立使用的可信度核心（`lab-trust-core`），以及四个围绕知识流工作的 Skill：`lab-wx-distillation` 蒸馏微信记录，`lab-life-reviewer` 采集人生访谈，`lab-retrospective` 复盘与蒸馏，`lab-intake` 生成入库提案。
+
+它解决的是 Agent 记忆的三个老问题——记得零散、来源不可追、还会在你不知情时被改写。这里的答案是三条立场：
 
 1. **Markdown 与 Git 是唯一事实源。** 向量库、关系图、检索索引都是可以随时从 Markdown 重建的派生层；换引擎不丢知识。
 2. **写入即提案。** 任何 Agent 都能读，但没有谁能直接写。每次改动都是一份精确到文件内容基线的提案，只有你在当前对话里明确批准，网关才会校验、提交 Git、重建索引。
@@ -141,7 +143,9 @@ git checkout main
 cd lab-trust-core && npm ci && npm run verify
 ```
 
-Skill 用社区 Agent Skills 安装器按需安装：
+当前 Skill 从本仓库的 `main` 分支按需安装；右侧 Releases 目前发布的是独立的 `lab-trust-core` 包，历史 tag 下的源码快照不包含这次 Skill 更名。
+
+使用社区 Agent Skills 安装器：
 
 ```bash
 npx skills add haorantang97/Personal-Ontology --skill lab-wx-distillation
@@ -164,7 +168,7 @@ Personal-Ontology/
 │   └── vault/                     # Obsidian Vault 骨架 + ops/（网关、schema、校验器）
 ├── lab-trust-core/                # 可独立安装的可信度核心；不依赖 lab-ontology
 ├── skills/
-│   ├── lab-wx-distillation/  # Python 流水线、契约、fixture、150 个测试
+│   ├── lab-wx-distillation/       # Python 流水线、契约、fixture、150 个测试
 │   ├── lab-life-reviewer/         # 双语参考文件
 │   ├── lab-retrospective/
 │   └── lab-intake/

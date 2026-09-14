@@ -1,5 +1,7 @@
 # Lab Trust Core 独立核心设计
 
+> 名称同步：2026-09-15。本文的 Skill 名称与目录已按当前主分支更新；原始设计日期、技术方案与实施记录保留。当前安装入口见[仓库首页](../../../README.md#quick-install)。
+
 日期：2026-08-26
 状态：已获用户批准
 
@@ -8,10 +10,10 @@
 Personal-Ontology 是一组围绕个人知识工作的独立组件目录，不是要求所有组件必须一起安装的单体产品。当前公开结构包含一个系统与四个 Skill：
 
 - 系统：`lab-ontology`
-- Skill：`lab-context-distillation-wx`
+- Skill：`lab-wx-distillation`
 - Skill：`lab-life-reviewer`
-- Skill：`lab-knowledge-retrospective`
-- Skill：`lab-knowledge-intake`
+- Skill：`lab-retrospective`
+- Skill：`lab-intake`
 
 现有可信度体系已经以 Schema、Agent 规则和部分校验逻辑存在于 `lab-ontology`，同时已被整理为一份可执行的 TypeScript 实现。此次工作的目标是把这份实现作为第二个顶层、可独立取得的组件加入 Personal-Ontology，统一命名为 `lab-trust-core`。
 
@@ -48,10 +50,10 @@ Personal-Ontology/
 ├── lab-ontology/                  # 完整个人知识库系统
 ├── lab-trust-core/                # 独立可信度判断核心
 └── skills/
-    ├── lab-context-distillation-wx/
+    ├── lab-wx-distillation/
     ├── lab-life-reviewer/
-    ├── lab-knowledge-retrospective/
-    └── lab-knowledge-intake/
+    ├── lab-retrospective/
+    └── lab-intake/
 ```
 
 `lab-trust-core` 必须位于仓库顶层，与 `lab-ontology` 平级。不得放入 `lab-ontology/`，也不得放入 `skills/`。
@@ -114,7 +116,7 @@ README 提供两种独立获取方式：
 
 - 完整系统：`lab-ontology`；
 - Trust Core：`lab-trust-core`；
-- 四个 Skill：`lab-context-distillation-wx`、`lab-life-reviewer`、`lab-knowledge-retrospective`、`lab-knowledge-intake`。
+- 四个 Skill：`lab-wx-distillation`、`lab-life-reviewer`、`lab-retrospective`、`lab-intake`。
 
 首页图示将 `lab-trust-core` 画成可选、平级的可信度内核：它可以被 `lab-ontology` 或外部知识系统采用，但不位于 `lab-ontology` 内部，也不暗示安装母系统后才能使用。
 

@@ -19,7 +19,9 @@
 
 **Let AI agents maintain knowledge about you — long-term, traceably, and only with your approval.**
 
-This is an original personal-ontology workbench: one complete knowledge system (`lab-ontology`), one independently usable Trust Core (`lab-trust-core`), and four Skills around the flow of knowledge. It addresses the three chronic problems of agent memory — fragments with no structure, claims with no provenance, and silent rewrites you never approved — with three positions:
+This is an original personal-ontology workbench: one complete knowledge system (`lab-ontology`), one independently usable Trust Core (`lab-trust-core`), and four Skills around the flow of knowledge: `lab-wx-distillation` distils WeChat records, `lab-life-reviewer` collects life interviews, `lab-retrospective` audits and distils completed work, and `lab-intake` prepares knowledge-base proposals.
+
+It addresses the three chronic problems of agent memory — fragments with no structure, claims with no provenance, and silent rewrites you never approved — with three positions:
 
 1. **Markdown and Git are the only source of truth.** Vectors, graphs and search indexes are derived layers that can be rebuilt at any time; switching engines never loses knowledge.
 2. **Every write is a proposal.** Any agent can read, but none can write directly. Each change is an exact, content-baselined proposal; only after you approve it in the conversation does the gateway validate, commit to Git and rebuild the index.
@@ -137,7 +139,9 @@ git checkout main
 cd lab-trust-core && npm ci && npm run verify
 ```
 
-The skills, via the community Agent Skills installer:
+Install the current Skills from this repository’s `main` branch. Releases currently distribute the standalone `lab-trust-core` package; source snapshots under older tags do not include this Skill rename.
+
+Use the community Agent Skills installer:
 
 ```bash
 npx skills add haorantang97/Personal-Ontology --skill lab-wx-distillation
