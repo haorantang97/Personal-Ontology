@@ -1,9 +1,9 @@
 ---
-name: lab-context-distillation-wx
+name: lab-wx-distillation
 description: Use when a user wants to collect, snapshot, lawfully decrypt, normalize, redact, map, merge, audit, adjudicate, or distill local macOS/Windows WeChat 4.x conversations into evidence-bounded personal context. Also trigger for 微信聊天蒸馏、微信数据库解析后的蒸馏、微信聊天知识库、全量 Map、跨事件归并、冲突补漏、蒸馏验收 or resumed WeChat distillation runs. Do not use for interview-led life review or general knowledge intake.
 ---
 
-# Lab Context Distillation WX
+# Lab WX Distillation
 
 > **Current release status: v2 is verified with synthetic/public fixtures; real-device validation remains capability-specific.** Do not claim compatibility with a particular WeChat 4.x build until that build passes the field checklist. Read [STATUS.md](STATUS.md), the [feature implementation matrix](docs/feature-implementation-matrix.md), and the immutable [machine contract manifest](contracts/real-distillation-v2/manifest.json) before use.
 

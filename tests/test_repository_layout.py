@@ -5,20 +5,20 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "skills" / "lab-context-distillation-wx"
+SKILL = ROOT / "skills" / "lab-wx-distillation"
 LIFE_REVIEWER = ROOT / "skills" / "lab-life-reviewer"
 
 
 class RepositoryLayoutTests(unittest.TestCase):
     def test_root_catalog_points_to_canonical_skill(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("skills/lab-context-distillation-wx/README.md", readme)
+        self.assertIn("skills/lab-wx-distillation/README.md", readme)
 
     def test_skill_entrypoints_use_public_name(self):
         skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
         agent = (SKILL / "agents" / "openai.yaml").read_text(encoding="utf-8")
-        self.assertRegex(skill, r"(?m)^name: lab-context-distillation-wx$")
-        self.assertIn("$lab-context-distillation-wx", agent)
+        self.assertRegex(skill, r"(?m)^name: lab-wx-distillation$")
+        self.assertIn("$lab-wx-distillation", agent)
         self.assertRegex(skill, r"(?i)wechat|微信")
 
     def test_legacy_context_distillation_directory_is_not_tracked(self):

@@ -10,7 +10,7 @@ MODULE = ROOT / "lab-ontology"
 VAULT = MODULE / "vault"
 GATEWAY = VAULT / "ops" / "gateway"
 SKILLS = ROOT / "skills"
-KNOWLEDGE_SKILLS = ("lab-knowledge-intake", "lab-knowledge-retrospective")
+KNOWLEDGE_SKILLS = ("lab-intake", "lab-retrospective")
 CONTENT_DIRECTORIES = ("projects", "decisions", "methods", "syntheses", "concepts", "sources", ".raw", "assets")
 CURRENT_DOCS = (
     ROOT / "README.md",

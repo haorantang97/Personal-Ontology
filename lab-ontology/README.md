@@ -104,7 +104,7 @@ codex mcp add \
   -- node /absolute/path/to/knowledge-vault/ops/gateway/server.mjs
 ```
 
-Codex 使用 CLI 注册 MCP，不使用下方的 `mcpServers` JSON。配置会写入 `~/.codex/config.toml`；注册后重启或重新加载 MCP 服务。可选的 `lab-knowledge-intake` 与 `lab-knowledge-retrospective` Skills 只提供触发指引，不能替代网关契约。
+Codex 使用 CLI 注册 MCP，不使用下方的 `mcpServers` JSON。配置会写入 `~/.codex/config.toml`；注册后重启或重新加载 MCP 服务。可选的 `lab-intake` 与 `lab-retrospective` Skills 只提供触发指引，不能替代网关契约。
 
 ### Claude Code
 

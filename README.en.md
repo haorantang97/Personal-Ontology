@@ -30,14 +30,14 @@ This is an original personal-ontology workbench: one complete knowledge system (
 ```mermaid
 flowchart LR
     subgraph Collect["Collect · turn experience into material"]
-        CD["lab-context-distillation-wx<br/>distil existing records (WeChat)"]
+        CD["lab-wx-distillation<br/>distil existing records (WeChat)"]
         LR["lab-life-reviewer<br/>interview-led life review"]
     end
     subgraph Distil["Distil · decide what deserves to survive"]
-        KR["lab-knowledge-retrospective<br/>conclusion review / forensic audit"]
+        KR["lab-retrospective<br/>conclusion review / forensic audit"]
     end
     subgraph File["File · propose and approve"]
-        KI["lab-knowledge-intake<br/>dedupe → exact proposal → approval"]
+        KI["lab-intake<br/>dedupe → exact proposal → approval"]
     end
     subgraph System["lab-ontology · core system"]
         GW["agent-knowledge gateway (MCP)<br/>13 knowledge_* tools"]
@@ -96,18 +96,18 @@ It is neither a second knowledge base nor a Skill: it stores, retrieves and writ
 
 | Stage | Skill | Input | Output | Docs |
 | --- | --- | --- | --- | --- |
-| Collect | `lab-context-distillation-wx` | WeChat 4.x chats, database snapshots or lawful exports | A redacted, routed, merged, acceptance-gated personal operating model and event ledger | [README](skills/lab-context-distillation-wx/README.md) |
+| Collect | `lab-wx-distillation` | WeChat 4.x chats, database snapshots or lawful exports | A redacted, routed, merged, acceptance-gated personal operating model and event ledger | [README](skills/lab-wx-distillation/README.md) |
 | Collect | `lab-life-reviewer` | Your own narration plus related materials | Per-event Raw records and structured handoffs, archived after approval | [README](skills/lab-life-reviewer/README.md) |
-| Distil | `lab-knowledge-retrospective` | A finished, paused or failed task, incident, interview or long conversation | A coverage-status audit plus few reusable conclusions (zero by default) | [README](skills/lab-knowledge-retrospective/README.md) |
-| File | `lab-knowledge-intake` | Anything already deemed worth keeping | One exact proposal; the gateway writes it after approval | [README](skills/lab-knowledge-intake/README.md) |
+| Distil | `lab-retrospective` | A finished, paused or failed task, incident, interview or long conversation | A coverage-status audit plus few reusable conclusions (zero by default) | [README](skills/lab-retrospective/README.md) |
+| File | `lab-intake` | Anything already deemed worth keeping | One exact proposal; the gateway writes it after approval | [README](skills/lab-intake/README.md) |
 
-**`lab-context-distillation-wx`** is the heaviest of the four: a deterministic local Python pipeline. Collection, decryption adaptation and identity redaction stay on your machine; the model only sees sealed, redacted packets. It is at v2.0.1 with 150 tests on synthetic/public fixtures and deliberately claims no real-device compatibility with any specific WeChat build until that build passes the field checklist.
+**`lab-wx-distillation`** is the heaviest of the four: a deterministic local Python pipeline. Collection, decryption adaptation and identity redaction stay on your machine; the model only sees sealed, redacted packets. It is at v2.0.1 with 150 tests on synthetic/public fixtures and deliberately claims no real-device compatibility with any specific WeChat build until that build passes the field checklist.
 
 **`lab-life-reviewer`** collects what records never captured: you narrate, the agent probes event by event, checks related materials, preserves Raw detail and produces a handoff. Interview and archive are two sequential tasks connected by files — the archive task never relies on remembering the interview chat.
 
-**`lab-knowledge-retrospective`** stands between collection and filing and asks what happened, whether the audit coverage is complete, and what deserves to survive. Short work uses conclusion mode. Failed projects, long conversations, cross-task scopes and turn-by-turn requests use forensic mode. It loads current method pages, then audits raw turns, completion claims, corrections and open loops before reporting `COMPLETE` or `PARTIAL`; only after that coverage gate does it distil evidence-bounded conclusions. Most retrospectives still correctly produce zero new pages.
+**`lab-retrospective`** stands between collection and filing and asks what happened, whether the audit coverage is complete, and what deserves to survive. Short work uses conclusion mode. Failed projects, long conversations, cross-task scopes and turn-by-turn requests use forensic mode. It loads current method pages, then audits raw turns, completion claims, corrections and open loops before reporting `COMPLETE` or `PARTIAL`; only after that coverage gate does it distil evidence-bounded conclusions. Most retrospectives still correctly produce zero new pages.
 
-**`lab-knowledge-intake`** is the thinnest and the only entry point: it calls `knowledge_intake` for the contract, dedupes, drafts an exact proposal and stops for your approval. It defines no schema, picks no destination and never writes files.
+**`lab-intake`** is the thinnest and the only entry point: it calls `knowledge_intake` for the contract, dedupes, drafts an exact proposal and stops for your approval. It defines no schema, picks no destination and never writes files.
 
 All four are provider-neutral: Codex, Claude Code and any MCP client share the same `SKILL.md`, differing only in install location.
 
@@ -117,10 +117,10 @@ All four are provider-neutral: Codex, Claude Code and any MCP client share the s
 | --- | --- | --- |
 | `lab-ontology` | Agent Knowledge 1.8.0 Native-only; schema pack 1.1.1; non-enforcing Trust Core shadow | Full deterministic unit suite, Schema/Vault validation and 13-tool boot probe in a temporary independent Git Vault on Node 20/24 (CI); a real vector service is only an optional manual integration check |
 | `lab-trust-core` | v0.1.2, independently installable Trust Core | 51 deterministic tests, Node 20/24, typecheck, build, privacy and package verification (CI) |
-| `lab-context-distillation-wx` | v2.0.1, verified within synthetic/public-fixture scope | 150 Python tests, bytecode compile, frozen contract SHA-256 (CI); real-device compatibility pending field validation |
+| `lab-wx-distillation` | v2.0.1, verified within synthetic/public-fixture scope | 150 Python tests, bytecode compile, frozen contract SHA-256 (CI); real-device compatibility pending field validation |
 | `lab-life-reviewer` | Working workflow skill | Skill package tests (CI); no behavioral tests |
-| `lab-knowledge-retrospective` | Working retrospective-audit skill | Skill package, forensic-contract and layout tests (CI) |
-| `lab-knowledge-intake` | Working router skill | Skill package and layout tests (CI) |
+| `lab-retrospective` | Working retrospective-audit skill | Skill package, forensic-contract and layout tests (CI) |
+| `lab-intake` | Working router skill | Skill package and layout tests (CI) |
 
 ## Quick install
 
@@ -140,10 +140,10 @@ cd lab-trust-core && npm ci && npm run verify
 The skills, via the community Agent Skills installer:
 
 ```bash
-npx skills add haorantang97/Personal-Ontology --skill lab-context-distillation-wx
+npx skills add haorantang97/Personal-Ontology --skill lab-wx-distillation
 npx skills add haorantang97/Personal-Ontology --skill lab-life-reviewer
-npx skills add haorantang97/Personal-Ontology --skill lab-knowledge-retrospective
-npx skills add haorantang97/Personal-Ontology --skill lab-knowledge-intake
+npx skills add haorantang97/Personal-Ontology --skill lab-retrospective
+npx skills add haorantang97/Personal-Ontology --skill lab-intake
 ```
 
 Copying the complete skill directory works too. Codex, Claude Code, direct use and uninstall instructions live in each module's README.
@@ -156,7 +156,7 @@ Copying the complete skill directory works too. Codex, Claude Code, direct use a
 
 **How does this relate to mem0 / Basic Memory?** Same problem space, different stance: they optimize for frictionless automatic memory; this optimizes for an auditable knowledge asset — approval-gated writes and evidence maturity. They can coexist.
 
-**Why are most skills still thin?** The gateway's current contract supplies schema, knowledge routing and write-approval rules, so collection and intake skills mostly lead the agent to the correct entry point. `lab-knowledge-retrospective` is an exception: stable execution controls such as mode selection, turn ledgers, claim verification and the coverage gate ship with the Skill, while domain methods and schema continue to evolve in the vault and gateway.
+**Why are most skills still thin?** The gateway's current contract supplies schema, knowledge routing and write-approval rules, so collection and intake skills mostly lead the agent to the correct entry point. `lab-retrospective` is an exception: stable execution controls such as mode selection, turn ledgers, claim verification and the coverage gate ship with the Skill, while domain methods and schema continue to evolve in the vault and gateway.
 
 **Can I use it commercially?** `lab-trust-core/` is MIT-licensed and may be used commercially under that license. The rest of the repository is free for personal and noncommercial use; commercial use needs a written license — see below.
 

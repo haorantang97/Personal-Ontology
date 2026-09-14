@@ -1,6 +1,6 @@
-# Lab Knowledge Intake / 知识库录入
+# Lab Intake / 知识库录入
 
-`lab-knowledge-intake` 是一个刻意保持轻薄的录入 Skill。它自己不定义 Schema、不决定文件放在哪里、也永远不直接写文件——它只负责把任意材料送进知识网关的提案流程，并在用户明确批准之前停下。
+`lab-intake` 是一个刻意保持轻薄的录入 Skill。它自己不定义 Schema、不决定文件放在哪里、也永远不直接写文件——它只负责把任意材料送进知识网关的提案流程，并在用户明确批准之前停下。
 
 契约由 MCP 网关的 `knowledge_intake` 和当前机器 Schema 提供。Skill 不复制一份固定 Schema，但会在生成提案前读取当前契约、目标页面和同类型有效页面，避免把通用 YAML 写法或业务生命周期误当成当前 Vault 接受的字段格式。
 
@@ -12,25 +12,27 @@
 
 ## Installation
 
+从旧名 `lab-knowledge-intake` 升级时，先按下文安装 `lab-intake` 并确认 Agent 能识别新名称，再删除旧的已安装 Skill 目录；知识库与任务资料无需移动。
+
 安装或复制完整目录。
 
 ### Community Agent Skills installer
 
 ```bash
-npx skills add haorantang97/Personal-Ontology --skill lab-knowledge-intake
+npx skills add haorantang97/Personal-Ontology --skill lab-intake
 ```
 
 ### Codex
 
-项目级：`<project>/.agents/skills/lab-knowledge-intake/`
-用户级：`~/.agents/skills/lab-knowledge-intake/`
+项目级：`<project>/.agents/skills/lab-intake/`
+用户级：`~/.agents/skills/lab-intake/`
 
-重新加载 Codex 后调用 `$lab-knowledge-intake`，或直接说“录入知识库”“把这个存下来”。
+重新加载 Codex 后调用 `$lab-intake`，或直接说“录入知识库”“把这个存下来”。
 
 ### Claude Code
 
-项目级：`<project>/.claude/skills/lab-knowledge-intake/`
-用户级：`~/.claude/skills/lab-knowledge-intake/`
+项目级：`<project>/.claude/skills/lab-intake/`
+用户级：`~/.claude/skills/lab-intake/`
 
 两端共用同一份 `SKILL.md`，不维护分叉实现。
 

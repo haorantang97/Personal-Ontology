@@ -35,10 +35,10 @@ class SkillPackageTests(unittest.TestCase):
     def test_at_least_the_four_catalogued_skills_exist(self):
         names = {path.name for path in skill_directories()}
         for expected in (
-            "lab-context-distillation-wx",
+            "lab-wx-distillation",
             "lab-life-reviewer",
-            "lab-knowledge-retrospective",
-            "lab-knowledge-intake",
+            "lab-retrospective",
+            "lab-intake",
         ):
             self.assertIn(expected, names)
 
