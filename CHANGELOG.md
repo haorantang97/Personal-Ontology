@@ -25,11 +25,17 @@ tags (`vX.Y.Z`). Module-internal versions are noted in the entries.
 
 ### Changed
 
+- Rename the public Skills to `lab-wx-distillation` (formerly
+  `lab-context-distillation-wx`), `lab-retrospective` (formerly
+  `lab-knowledge-retrospective`) and `lab-intake` (formerly
+  `lab-knowledge-intake`). Update discovery, installation, catalogue links,
+  cross-Skill references and CI paths; runtime behaviour and frozen contracts
+  are unchanged.
 - `lab-ontology` schema pack 1.2.0 moves exact candidate validation to proposal
   creation, accepts YAML flow and block lists, separates optional project
   lifecycle from record status, decouples retrieval priority from evidence
   maturity, and labels legacy Trust Core gaps as non-blocking migration warnings.
-- `lab-knowledge-retrospective` now separates concise conclusion reviews from
+- `lab-retrospective` now separates concise conclusion reviews from
   forensic reviews of failed, long or cross-task work. Forensic mode audits raw
   turns and completion claims, tracks corrections and open loops, and reports
   `COMPLETE` or `PARTIAL` coverage before distilling reusable conclusions.

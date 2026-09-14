@@ -13,11 +13,11 @@ jobs:
       - name: Layout, naming and public-boundary tests
         run: python3 -m unittest discover -s tests -p 'test_*.py'
 
-  lab-context-distillation-wx:
+  lab-wx-distillation:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: skills/lab-context-distillation-wx
+        working-directory: skills/lab-wx-distillation
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

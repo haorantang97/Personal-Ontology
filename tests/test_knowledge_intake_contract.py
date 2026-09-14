@@ -3,8 +3,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-INTAKE = ROOT / "skills" / "lab-knowledge-intake" / "SKILL.md"
-RETROSPECTIVE = ROOT / "skills" / "lab-knowledge-retrospective" / "SKILL.md"
+INTAKE = ROOT / "skills" / "lab-intake" / "SKILL.md"
+RETROSPECTIVE = ROOT / "skills" / "lab-retrospective" / "SKILL.md"
 
 
 class KnowledgeIntakeContractTests(unittest.TestCase):

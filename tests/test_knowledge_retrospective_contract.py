@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE = ROOT / "skills" / "lab-knowledge-retrospective"
+MODULE = ROOT / "skills" / "lab-retrospective"
 SKILL = MODULE / "SKILL.md"
 PROTOCOL = MODULE / "references" / "forensic-conversation-audit.md"
 MANIFEST = MODULE / "agents" / "openai.yaml"
@@ -150,7 +150,7 @@ class KnowledgeRetrospectiveContractTests(unittest.TestCase):
         self.assertLessEqual(len(short_description), 64)
         self.assertIn("短任务", short_description)
         self.assertIn("长对话与失败项目", short_description)
-        self.assertIn("$lab-knowledge-retrospective", default_prompt)
+        self.assertIn("$lab-retrospective", default_prompt)
         self.assertIn("COMPLETE/PARTIAL", default_prompt)
         self.assertLess(
             default_prompt.index("先预检历史完整性"),

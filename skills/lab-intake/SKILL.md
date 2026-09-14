@@ -1,9 +1,9 @@
 ---
-name: lab-knowledge-intake
+name: lab-intake
 description: Use whenever the user says 录入知识库、导入知识库、保存到知识库、沉淀到知识库, asks to add/update/merge/move/delete knowledge, or provides a link, attachment, text, or conversation to put into the user's schema-governed Markdown/Obsidian knowledge base through Agent Knowledge.
 ---
 
-# Lab Knowledge Intake
+# Lab Intake
 
 1. Call the `agent-knowledge` MCP tool `knowledge_intake` first.
 2. Treat its response as the sole current source of the vault location, schema, page routing, exclusions, approval rules, and synchronization workflow. When available, also read `knowledge_schema` immediately before drafting and use its active machine contract for required fields and enums.

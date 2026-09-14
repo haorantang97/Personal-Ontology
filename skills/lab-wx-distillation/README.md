@@ -1,8 +1,8 @@
-# Lab Context Distillation WX
+# Lab WX Distillation
 
-> **中文摘要** — `lab-context-distillation-wx` 是一条确定性的本地 Python 流水线，把你授权的微信 4.x 聊天数据变成有证据边界的个人上下文。采集、解密适配和身份脱敏全部在本机完成，模型只看到密封过的脱敏数据包；每条路由恰好产生一个处理结果，事件各自带语义状态，完整事件账本是权威。当前为 v2.0.1，在合成/公开 fixture 上通过 150 个测试；**不**宣称与任何具体微信构建的真机兼容。安装、验证、隐私边界、升级与卸载说明见下文（英文）。运行前必读 [STATUS.md](STATUS.md)、[privacy-and-authorization.md](references/privacy-and-authorization.md) 与 [platform-connectors.md](references/platform-connectors.md)。
+> **中文摘要** — `lab-wx-distillation` 是一条确定性的本地 Python 流水线，把你授权的微信 4.x 聊天数据变成有证据边界的个人上下文。采集、解密适配和身份脱敏全部在本机完成，模型只看到密封过的脱敏数据包；每条路由恰好产生一个处理结果，事件各自带语义状态，完整事件账本是权威。当前为 v2.0.1，在合成/公开 fixture 上通过 150 个测试；**不**宣称与任何具体微信构建的真机兼容。安装、验证、隐私边界、升级与卸载说明见下文（英文）。运行前必读 [STATUS.md](STATUS.md)、[privacy-and-authorization.md](references/privacy-and-authorization.md) 与 [platform-connectors.md](references/platform-connectors.md)。
 
-`lab-context-distillation-wx` is a provider-neutral Agent Skill and deterministic local pipeline primarily for turning user-approved WeChat 4.x data into evidence-bounded personal context. Lawful standard conversation exports remain available as a fallback ingestion boundary; they do not make this a general-purpose multi-platform importer.
+`lab-wx-distillation` is a provider-neutral Agent Skill and deterministic local pipeline primarily for turning user-approved WeChat 4.x data into evidence-bounded personal context. Lawful standard conversation exports remain available as a fallback ingestion boundary; they do not make this a general-purpose multi-platform importer.
 
 It is not prompt-only. The directory contains the Skill entrypoint, Python controller, platform connectors, immutable contracts, synthetic fixtures, tests, privacy rules, validation gates, and portable runtime packaging.
 
@@ -17,7 +17,7 @@ Install or copy this whole directory. Installing only `SKILL.md` removes the det
 From the repository URL:
 
 ```bash
-npx skills add haorantang97/Personal-Ontology --skill lab-context-distillation-wx
+npx skills add haorantang97/Personal-Ontology --skill lab-wx-distillation
 ```
 
 Review the files and the installer's behavior before granting it access to a private environment. This project does not require the community installer at runtime.
@@ -27,29 +27,29 @@ Review the files and the installer's behavior before granting it access to a pri
 For one project, copy the complete directory to:
 
 ```text
-<project>/.agents/skills/lab-context-distillation-wx/
+<project>/.agents/skills/lab-wx-distillation/
 ```
 
 For the current user, copy it to:
 
 ```text
-~/.agents/skills/lab-context-distillation-wx/
+~/.agents/skills/lab-wx-distillation/
 ```
 
-Restart or reload Codex after installation, then invoke `$lab-context-distillation-wx` or make a matching request such as “蒸馏这批已经脱敏的微信聊天”。
+Restart or reload Codex after installation, then invoke `$lab-wx-distillation` or make a matching request such as “蒸馏这批已经脱敏的微信聊天”。
 
 ### Claude Code
 
 For one project, copy the complete directory to:
 
 ```text
-<project>/.claude/skills/lab-context-distillation-wx/
+<project>/.claude/skills/lab-wx-distillation/
 ```
 
 For the current user, copy it to:
 
 ```text
-~/.claude/skills/lab-context-distillation-wx/
+~/.claude/skills/lab-wx-distillation/
 ```
 
 Reload Claude Code and invoke the Skill by name. The same `SKILL.md`, scripts, contracts, and tests are used; there is no separate Claude implementation.
@@ -120,17 +120,17 @@ Read [privacy-and-authorization.md](references/privacy-and-authorization.md) bef
 
 Replace the installed module only with a reviewed newer release. Do not overwrite case directories or immutable releases. Before resuming a case, validate the new contract bundle and use the explicit profile update/re-extraction state machine; accepted Map generations are not rerun automatically.
 
-If upgrading from the former `lab-context-distillation` public name, install this directory under `lab-context-distillation-wx`, verify discovery and the frozen contract, then remove only the former installed Skill directory. Case directories remain outside the Skill package and do not move.
+If upgrading from `lab-context-distillation-wx` or the earlier `lab-context-distillation` public name, install this directory under `lab-wx-distillation`, verify discovery and the frozen contract, then remove only the former installed Skill directory. Case directories remain outside the Skill package and do not move.
 
 Historical release manifests under `versions/` remain read-only. They preserve the standalone project's earlier identifiers and hashes for provenance.
 
 ## Uninstall
 
-Remove only the installed `lab-context-distillation-wx` directory from the Agent skills location. Case directories live elsewhere by design and are not deleted automatically. Review and remove those separately only when you intentionally want to destroy the local data.
+Remove only the installed `lab-wx-distillation` directory from the Agent skills location. Case directories live elsewhere by design and are not deleted automatically. Review and remove those separately only when you intentionally want to destroy the local data.
 
 ## Troubleshooting
 
-- **Skill is not discovered:** confirm the folder is named `lab-context-distillation-wx`, contains `SKILL.md` at its top level, and reload the Agent.
+- **Skill is not discovered:** confirm the folder is named `lab-wx-distillation`, contains `SKILL.md` at its top level, and reload the Agent.
 - **Contract validation fails:** stop. Restore the exact release files instead of editing a sealed contract or its manifest.
 - **SQLCipher is missing:** use a lawful plaintext export, or install and license SQLCipher separately. Do not bypass the key authorization gate.
 - **A WeChat schema is unknown:** preserve the snapshot, report the schema fingerprint as unsupported, and use a lawful export. Do not guess a mapping.

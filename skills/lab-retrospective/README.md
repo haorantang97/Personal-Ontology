@@ -1,17 +1,19 @@
-# Lab Knowledge Retrospective / 复盘蒸馏
+# Lab Retrospective / 复盘蒸馏
 
-`lab-knowledge-retrospective` 把一段已经结束、暂停或失败的工作——任务、事故、访谈或长对话——先审计、再蒸馏成可复用的结论，并按审批流程交给 [`lab-knowledge-intake`](../lab-knowledge-intake/README.md) 写入知识库。短任务使用结论模式；失败项目、长对话、跨任务复盘或“复盘每一次问答”使用法证模式，必须读取原始轮次、核验“已完成/已跑通”等声明，并明确报告 `COMPLETE` 或 `PARTIAL` 覆盖状态。
+`lab-retrospective` 把一段已经结束、暂停或失败的工作——任务、事故、访谈或长对话——先审计、再蒸馏成可复用的结论，并按审批流程交给 [`lab-intake`](../lab-intake/README.md) 写入知识库。短任务使用结论模式；失败项目、长对话、跨任务复盘或“复盘每一次问答”使用法证模式，必须读取原始轮次、核验“已完成/已跑通”等声明，并明确报告 `COMPLETE` 或 `PARTIAL` 覆盖状态。
 
 本 Skill 内置稳定的执行协议：模式选择、逐轮账本、声明核验、覆盖门和审批门。具体领域的方法仍住在知识库的 `methods/` 页面里并持续更新；方法页可以补充判断框架，不能削弱内置协议。
 
 ## Installation
+
+从旧名 `lab-knowledge-retrospective` 升级时，先按下文安装 `lab-retrospective` 并确认 Agent 能识别新名称，再删除旧的已安装 Skill 目录；知识库与任务资料无需移动。
 
 安装或复制完整目录。
 
 ### Community Agent Skills installer
 
 ```bash
-npx skills add haorantang97/Personal-Ontology --skill lab-knowledge-retrospective
+npx skills add haorantang97/Personal-Ontology --skill lab-retrospective
 ```
 
 ### Codex
@@ -19,29 +21,29 @@ npx skills add haorantang97/Personal-Ontology --skill lab-knowledge-retrospectiv
 项目级安装位置：
 
 ```text
-<project>/.agents/skills/lab-knowledge-retrospective/
+<project>/.agents/skills/lab-retrospective/
 ```
 
 用户级安装位置：
 
 ```text
-~/.agents/skills/lab-knowledge-retrospective/
+~/.agents/skills/lab-retrospective/
 ```
 
-重新加载 Codex 后调用 `$lab-knowledge-retrospective`，或在一件事做完后说“复盘一下”“这次有什么值得记下来的”。
+重新加载 Codex 后调用 `$lab-retrospective`，或在一件事做完后说“复盘一下”“这次有什么值得记下来的”。
 
 ### Claude Code
 
 项目级安装位置：
 
 ```text
-<project>/.claude/skills/lab-knowledge-retrospective/
+<project>/.claude/skills/lab-retrospective/
 ```
 
 用户级安装位置：
 
 ```text
-~/.claude/skills/lab-knowledge-retrospective/
+~/.claude/skills/lab-retrospective/
 ```
 
 Codex 与 Claude Code 使用同一份 `SKILL.md`。
@@ -50,7 +52,7 @@ Codex 与 Claude Code 使用同一份 `SKILL.md`。
 
 - 核心审计协议没有运行时依赖；只要宿主能提供当前任务或用户指定的关联任务历史，就可以执行。历史不完整时仍可交付有边界的报告，但覆盖状态只能是 `PARTIAL`。
 - `agent-knowledge` MCP 网关是可选的方法增强，用于读取当前领域方法，见 [lab-ontology](../../lab-ontology/README.md)。它不可用时仍可执行内置协议，但不得声称已检查方法库。
-- `lab-knowledge-intake` 只在用户明确要求把批准后的结论写入知识库时需要；普通复盘不依赖它，也不得绕过审批直接写 Vault 或派生索引。
+- `lab-intake` 只在用户明确要求把批准后的结论写入知识库时需要；普通复盘不依赖它，也不得绕过审批直接写 Vault 或派生索引。
 
 ## Workflow
 
@@ -62,7 +64,7 @@ Codex 与 Claude Code 使用同一份 `SKILL.md`。
 6. 先通过覆盖门；任何历史缺口、漏审轮次或漏核验声明都会强制状态为 `PARTIAL`。
 7. 把过程叙述与可迁移结论分开，为每条候选标注证据、样本量、适用范围和失效条件。
 8. 先把复盘审计交给用户；默认可以没有任何长期知识候选。
-9. 用户要求入库时交给 `lab-knowledge-intake`：先取得当前 intake 与机器 Schema，读取目标页，预检字段枚举、列表格式和双向关系；只有网关成功返回 Proposal ID 才算进入提案。
+9. 用户要求入库时交给 `lab-intake`：先取得当前 intake 与机器 Schema，读取目标页，预检字段枚举、列表格式和双向关系；只有网关成功返回 Proposal ID 才算进入提案。
 
 ## Verify
 
@@ -87,7 +89,7 @@ python3 /path/to/skill-creator/scripts/quick_validate.py .
 
 ## Uninstall
 
-只删除 Agent Skills 位置中的 `lab-knowledge-retrospective` 目录。
+只删除 Agent Skills 位置中的 `lab-retrospective` 目录。
 
 ## License
 
@@ -95,4 +97,4 @@ python3 /path/to/skill-creator/scripts/quick_validate.py .
 
 ---
 
-`lab-knowledge-retrospective` audits finished, paused or failed work before distilling it. Short work uses conclusion mode; long conversations, failed projects and cross-task reviews use forensic mode with raw-turn coverage, completion-claim verification and an explicit `COMPLETE` or `PARTIAL` status. Evidence-bounded conclusions still default to zero and reach the knowledge base only through `lab-knowledge-intake` and user approval.
+`lab-retrospective` audits finished, paused or failed work before distilling it. Short work uses conclusion mode; long conversations, failed projects and cross-task reviews use forensic mode with raw-turn coverage, completion-claim verification and an explicit `COMPLETE` or `PARTIAL` status. Evidence-bounded conclusions still default to zero and reach the knowledge base only through `lab-intake` and user approval.

@@ -1,5 +1,5 @@
 ---
-name: lab-knowledge-retrospective
+name: lab-retrospective
 description: |
   在一项实质性任务、事故、访谈或长对话结束、暂停或被判定失败后，做证据化复盘，并把通过门槛的
   候选结论交给提案审批流程。既支持短任务的结论复盘，也支持对失败项目、长对话、多个关联任务以及
@@ -12,7 +12,7 @@ description: |
   agent-knowledge 的当前 intake 契约，并严格走精确提案与用户审批流程。
 ---
 
-# Lab Knowledge Retrospective
+# Lab Retrospective
 
 把已经结束的一段工作变成有证据、有边界、能改变未来行动的结论。默认结果可以为零；不要为了显得有收获而制造规律。
 
@@ -188,13 +188,13 @@ description: |
 
 ### 用户一开始就要求入库
 
-在任何知识库变更工作之前，把通过门槛的候选明确交给 `lab-knowledge-intake`；由 Intake 先调用 `agent-knowledge` MCP 的 `knowledge_intake`，再读取当前机器 Schema、目标页面和同类型有效页面，完成格式、枚举与双向关系预检。复盘 Skill 不自行猜测 frontmatter，也不把项目“暂停/失败/完成”等业务生命周期直接写入 Schema 的 `status` 字段。
+在任何知识库变更工作之前，把通过门槛的候选明确交给 `lab-intake`；由 Intake 先调用 `agent-knowledge` MCP 的 `knowledge_intake`，再读取当前机器 Schema、目标页面和同类型有效页面，完成格式、枚举与双向关系预检。复盘 Skill 不自行猜测 frontmatter，也不把项目“暂停/失败/完成”等业务生命周期直接写入 Schema 的 `status` 字段。
 
 只有 `knowledge_propose_changes` 返回成功并生成精确 Proposal ID，才可说“已进入提案”。提案创建或批准后应用若被校验拒绝，必须明确说明知识库没有修改，并交回 Intake 按当前契约重建提案；旧批准不能转移。
 
 ### 用户只要求复盘
 
-不要自动创建待审提案。先交付复盘审计；有合格候选时，询问用户是否要准备知识库提案。用户同意准备后交给 `lab-knowledge-intake` 执行当前契约和提案预检，再生成精确提案并单独等待审批。对候选结论的认可不等于对尚未展示的文件变更授权。
+不要自动创建待审提案。先交付复盘审计；有合格候选时，询问用户是否要准备知识库提案。用户同意准备后交给 `lab-intake` 执行当前契约和提案预检，再生成精确提案并单独等待审批。对候选结论的认可不等于对尚未展示的文件变更授权。
 
 ### 网关不可用
 
