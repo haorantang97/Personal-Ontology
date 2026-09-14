@@ -1,5 +1,7 @@
 # Lab Trust Core Catalog Integration Implementation Plan
 
+> Naming update: 2026-09-15. Skill names and directory examples now match the current main branch; the original plan and implementation record are retained. See the [repository README](../../../README.en.md#quick-install) for current installation instructions.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add `lab-trust-core` as a top-level, independently installable Trust Core in Personal-Ontology, display it after `lab-ontology` and before the four Skills, and introduce no premature `modules/` category.
@@ -190,10 +192,10 @@ Append these methods to `LabTrustCoreLayoutTests`:
             self.assertIn("lab-trust-core/README.md", readme, filename)
             self.assertIn("lab-ontology/README.md", readme, filename)
             for skill in (
-                "lab-context-distillation-wx",
+                "lab-wx-distillation",
                 "lab-life-reviewer",
-                "lab-knowledge-retrospective",
-                "lab-knowledge-intake",
+                "lab-retrospective",
+                "lab-intake",
             ):
                 self.assertIn(f"skills/{skill}/README.md", readme, filename)
 
