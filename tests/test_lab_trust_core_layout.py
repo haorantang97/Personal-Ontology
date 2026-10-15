@@ -47,10 +47,10 @@ class LabTrustCoreLayoutTests(unittest.TestCase):
     def test_bilingual_catalogues_order_system_core_then_four_skills(self):
         self.assertFalse((ROOT / "modules").exists())
         skill_links = (
-            "skills/lab-wx-distillation/README.md",
-            "skills/lab-life-reviewer/README.md",
-            "skills/lab-retrospective/README.md",
-            "skills/lab-intake/README.md",
+            "docs/skills/lab-wx-distillation/README.md",
+            "docs/skills/lab-life-reviewer/README.md",
+            "docs/skills/lab-retrospective/README.md",
+            "docs/skills/lab-intake/README.md",
         )
         for filename in ("README.md", "README.en.md"):
             readme = (ROOT / filename).read_text(encoding="utf-8")

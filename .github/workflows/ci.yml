@@ -24,7 +24,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Unit tests
-        run: PYTHONPATH=scripts python3 -m unittest discover -s tests -p 'test_*.py'
+        working-directory: tests/lab-wx-distillation
+        run: PYTHONPATH=../../skills/lab-wx-distillation/scripts python3 -m unittest discover -s tests -p 'test_*.py'
       - name: Bytecode compilation
         run: python3 -m compileall -q scripts
       - name: Frozen contract bundle

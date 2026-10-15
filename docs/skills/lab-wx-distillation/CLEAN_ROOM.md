@@ -15,7 +15,7 @@
 
 ## 允许的基础
 
-实现使用 Python 标准库、SQLite 的公开接口和可选外部 SQLCipher 进程协议。第三方代码没有 vendoring 到本仓库。许可状态见 `THIRD_PARTY_NOTICES.md`。
+实现使用 Python 标准库、SQLite 的公开接口和可选外部 SQLCipher 进程协议。第三方代码没有 vendoring 到本仓库。许可状态见 [THIRD_PARTY_NOTICES.md](../../../skills/lab-wx-distillation/THIRD_PARTY_NOTICES.md)。
 
 ## 证据链
 
@@ -32,6 +32,6 @@
 
 ## 外部方法边界
 
-Nuwa、digital-life 和 me.skill 在审阅时显示 MIT，本项目仍只采用跨领域/holdout/非泛化验证、可携带资产包、分层与纠正回滚等抽象方法，没有复制其代码、提示词、模板、目录或措辞。Persona-Skill 审阅时未见许可，PersonalOS 是 GPL-3.0，Nova 未作为工程来源；三者都只作为抽象思想参考。详见 `references/external-method-review.md`。
+Nuwa、digital-life 和 me.skill 在审阅时显示 MIT，本项目仍只采用跨领域/holdout/非泛化验证、可携带资产包、分层与纠正回滚等抽象方法，没有复制其代码、提示词、模板、目录或措辞。Persona-Skill 审阅时未见许可，PersonalOS 是 GPL-3.0，Nova 未作为工程来源；三者都只作为抽象思想参考。详见 [references/external-method-review.md](../../../skills/lab-wx-distillation/references/external-method-review.md)。
 
 此声明描述工程流程，不构成法律意见。正式公开发布前应进行律师和代码来源复核。

@@ -6,7 +6,7 @@
 
 ## Installation
 
-安装或复制完整目录。只复制 `SKILL.md` 会丢失采访、归档和 handoff 契约，不受支持。
+安装或复制仓库中的完整 `skills/lab-life-reviewer/` 目录。人工说明位于 `docs/skills/lab-life-reviewer/`，不属于安装内容。只复制 `SKILL.md` 会丢失采访、归档和 handoff 契约，不受支持。
 
 ### Community Agent Skills installer
 
@@ -57,10 +57,10 @@ Codex 与 Claude Code 使用同一份 `SKILL.md` 和 references，不维护两�
 
 ## Verify
 
-从本目录运行 Skill 结构校验：
+从仓库根目录运行 Skill 结构校验：
 
 ```bash
-python3 /path/to/skill-creator/scripts/quick_validate.py .
+python3 /path/to/skill-creator/scripts/quick_validate.py skills/lab-life-reviewer
 ```
 
 同时确认以下中英文参考文件完整存在：
@@ -87,7 +87,7 @@ python3 /path/to/skill-creator/scripts/quick_validate.py .
 
 ## License
 
-本模块采用 [PolyForm Noncommercial License 1.0.0](LICENSE.md)（全文见仓库根目录）：个人与非商业用途可自由使用、修改和分发；商业用途需另行取得著作权人的书面授权。
+本模块采用 [PolyForm Noncommercial License 1.0.0](../../../skills/lab-life-reviewer/LICENSE.md)（全文见仓库根目录）：个人与非商业用途可自由使用、修改和分发；商业用途需另行取得著作权人的书面授权。
 
 ---
 

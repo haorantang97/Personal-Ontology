@@ -13,7 +13,7 @@ from personal_context_distillation.life_events import (
 from personal_context_distillation.places import PLACE_KINDS
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3] / "skills" / "lab-wx-distillation"
 CONTRACT = ROOT / "contracts" / "real-distillation-v2"
 
 

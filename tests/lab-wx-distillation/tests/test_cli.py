@@ -6,9 +6,9 @@ import unittest
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3] / "skills" / "lab-wx-distillation"
 CLI = ROOT / "scripts" / "pcd.py"
-FIXTURE = ROOT / "tests" / "fixtures" / "synthetic_rows.jsonl"
+FIXTURE = Path(__file__).parent / "fixtures" / "synthetic_rows.jsonl"
 
 
 class CLITests(unittest.TestCase):

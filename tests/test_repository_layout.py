@@ -12,7 +12,7 @@ LIFE_REVIEWER = ROOT / "skills" / "lab-life-reviewer"
 class RepositoryLayoutTests(unittest.TestCase):
     def test_root_catalog_points_to_canonical_skill(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("skills/lab-wx-distillation/README.md", readme)
+        self.assertIn("docs/skills/lab-wx-distillation/README.md", readme)
 
     def test_skill_entrypoints_use_public_name(self):
         skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
@@ -39,8 +39,8 @@ class RepositoryLayoutTests(unittest.TestCase):
 
     def test_life_reviewer_is_self_contained_and_catalogued(self):
         root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        module_readme = (LIFE_REVIEWER / "README.md").read_text(encoding="utf-8")
-        self.assertIn("skills/lab-life-reviewer/README.md", root_readme)
+        module_readme = (ROOT / "docs" / "skills" / LIFE_REVIEWER.name / "README.md").read_text(encoding="utf-8")
+        self.assertIn("docs/skills/lab-life-reviewer/README.md", root_readme)
         self.assertIn("Codex", module_readme)
         self.assertIn("Claude Code", module_readme)
         for filename in (
@@ -64,7 +64,7 @@ class RepositoryLayoutTests(unittest.TestCase):
         self.assertEqual(tracked, [])
 
     def test_module_has_human_installation_manual(self):
-        readme = (SKILL / "README.md").read_text(encoding="utf-8")
+        readme = (ROOT / "docs" / "skills" / SKILL.name / "README.md").read_text(encoding="utf-8")
         for heading in ("Codex", "Claude Code", "Verify", "Privacy", "Uninstall"):
             self.assertIn(heading, readme)
 

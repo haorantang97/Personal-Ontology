@@ -3,7 +3,13 @@ import unittest
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3] / "skills" / "lab-wx-distillation"
+REPOSITORY = Path(__file__).resolve().parents[3]
+PUBLIC_TREES = (
+    ROOT,
+    REPOSITORY / "docs" / "skills" / "lab-wx-distillation",
+    REPOSITORY / "tests" / "lab-wx-distillation",
+)
 
 
 class PublicPackageBoundaryTests(unittest.TestCase):
@@ -13,7 +19,7 @@ class PublicPackageBoundaryTests(unittest.TestCase):
             re.compile("-----" + r"BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", re.IGNORECASE),
             re.compile("019fa20f" + r"-3c7f-7f73-9a0a-82184b30f8bf"),
         ]
-        for path in ROOT.rglob("*"):
+        for path in (path for tree in PUBLIC_TREES for path in tree.rglob("*")):
             if ".git" in path.parts or "__pycache__" in path.parts:
                 continue
             self.assertFalse(path.is_symlink(), f"public tree contains a symlink: {path}")

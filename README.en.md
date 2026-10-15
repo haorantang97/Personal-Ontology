@@ -98,10 +98,10 @@ It is neither a second knowledge base nor a Skill: it stores, retrieves and writ
 
 | Stage | Skill | Input | Output | Docs |
 | --- | --- | --- | --- | --- |
-| Collect | `lab-wx-distillation` | WeChat 4.x chats, database snapshots or lawful exports | A redacted, routed, merged, acceptance-gated personal operating model and event ledger | [README](skills/lab-wx-distillation/README.md) |
-| Collect | `lab-life-reviewer` | Your own narration plus related materials | Per-event Raw records and structured handoffs, archived after approval | [README](skills/lab-life-reviewer/README.md) |
-| Distil | `lab-retrospective` | A finished, paused or failed task, incident, interview or long conversation | A coverage-status audit plus few reusable conclusions (zero by default) | [README](skills/lab-retrospective/README.md) |
-| File | `lab-intake` | Anything already deemed worth keeping | One exact proposal; the gateway writes it after approval | [README](skills/lab-intake/README.md) |
+| Collect | `lab-wx-distillation` | WeChat 4.x chats, database snapshots or lawful exports | A redacted, routed, merged, acceptance-gated personal operating model and event ledger | [README](docs/skills/lab-wx-distillation/README.md) |
+| Collect | `lab-life-reviewer` | Your own narration plus related materials | Per-event Raw records and structured handoffs, archived after approval | [README](docs/skills/lab-life-reviewer/README.md) |
+| Distil | `lab-retrospective` | A finished, paused or failed task, incident, interview or long conversation | A coverage-status audit plus few reusable conclusions (zero by default) | [README](docs/skills/lab-retrospective/README.md) |
+| File | `lab-intake` | Anything already deemed worth keeping | One exact proposal; the gateway writes it after approval | [README](docs/skills/lab-intake/README.md) |
 
 **`lab-wx-distillation`** is the heaviest of the four: a deterministic local Python pipeline. Collection, decryption adaptation and identity redaction stay on your machine; the model only sees sealed, redacted packets. It is at v2.0.1 with 150 tests on synthetic/public fixtures and deliberately claims no real-device compatibility with any specific WeChat build until that build passes the field checklist.
 
@@ -150,7 +150,7 @@ npx skills add haorantang97/Personal-Ontology --skill lab-retrospective
 npx skills add haorantang97/Personal-Ontology --skill lab-intake
 ```
 
-Copying the complete skill directory works too. Codex, Claude Code, direct use and uninstall instructions live in each module's README.
+Copying the complete `skills/{name}/` installation directory works too. Human manuals live in `docs/skills/{name}/README.md`; development tests live in `tests/`. These are outside the installed skills.
 
 ## FAQ
 

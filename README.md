@@ -98,10 +98,10 @@ flowchart LR
 
 | 阶段 | Skill | 输入 | 产出 | 文档 |
 | --- | --- | --- | --- | --- |
-| 采集 | `lab-wx-distillation` | 微信 4.x 聊天、数据库快照或标准导出 | 经脱敏、路由、归并、验收的个人运作模型与事件账本 | [打开 Skill 文档](skills/lab-wx-distillation/README.md) |
-| 采集 | `lab-life-reviewer` | 你的主动讲述 + 与当前主题相关的材料 | 逐事件的 Raw 记录与结构化 handoff，批准后归档 | [打开 Skill 文档](skills/lab-life-reviewer/README.md) |
-| 蒸馏 | `lab-retrospective` | 一段已经结束、暂停或失败的任务、事故、访谈或长对话 | 有覆盖状态的复盘审计 + 少量可复用结论（默认为零） | [打开 Skill 文档](skills/lab-retrospective/README.md) |
-| 入库 | `lab-intake` | 任何已决定要保留的材料：链接、文件、文本、结论 | 一份精确提案；批准后由网关写入 Vault | [打开 Skill 文档](skills/lab-intake/README.md) |
+| 采集 | `lab-wx-distillation` | 微信 4.x 聊天、数据库快照或标准导出 | 经脱敏、路由、归并、验收的个人运作模型与事件账本 | [打开 Skill 文档](docs/skills/lab-wx-distillation/README.md) |
+| 采集 | `lab-life-reviewer` | 你的主动讲述 + 与当前主题相关的材料 | 逐事件的 Raw 记录与结构化 handoff，批准后归档 | [打开 Skill 文档](docs/skills/lab-life-reviewer/README.md) |
+| 蒸馏 | `lab-retrospective` | 一段已经结束、暂停或失败的任务、事故、访谈或长对话 | 有覆盖状态的复盘审计 + 少量可复用结论（默认为零） | [打开 Skill 文档](docs/skills/lab-retrospective/README.md) |
+| 入库 | `lab-intake` | 任何已决定要保留的材料：链接、文件、文本、结论 | 一份精确提案；批准后由网关写入 Vault | [打开 Skill 文档](docs/skills/lab-intake/README.md) |
 
 **`lab-wx-distillation`** 是四个里最重的一个：一条确定性的本地 Python 流水线，负责从既有记录里提取。它把采集、解密适配、身份脱敏留在本机，只让模型看到密封过的、脱敏的数据包；每条路由恰好产生一个处理结果，事件各自带语义状态，完整事件账本是权威，重要性只影响展示、不删除事件。当前状态是 v2.0.1，在合成/公开 fixture 上通过 150 个测试；它**不**宣称与任何具体微信构建的真机兼容，没有通过现场清单之前也不应该这样宣称。
 
@@ -154,7 +154,7 @@ npx skills add haorantang97/Personal-Ontology --skill lab-retrospective
 npx skills add haorantang97/Personal-Ontology --skill lab-intake
 ```
 
-也可以只复制对应的完整 Skill 目录。Codex、Claude Code、直接使用和卸载说明都在各模块 README 中。
+也可以只复制对应的 `skills/{name}/` 完整安装目录。安装手册位于 `docs/skills/{name}/README.md`，开发测试位于 `tests/`，不会随 Skill 安装。
 
 ## 仓库结构
 
@@ -167,12 +167,13 @@ Personal-Ontology/
 │   ├── README.md · docs/          # 模块手册、架构、安装
 │   └── vault/                     # Obsidian Vault 骨架 + ops/（网关、schema、校验器）
 ├── lab-trust-core/                # 可独立安装的可信度核心；不依赖 lab-ontology
+├── docs/skills/                   # Skill 安装手册与开发记录
 ├── skills/
-│   ├── lab-wx-distillation/       # Python 流水线、契约、fixture、150 个测试
+│   ├── lab-wx-distillation/       # Python 流水线、契约与运行参考
 │   ├── lab-life-reviewer/         # 双语参考文件
 │   ├── lab-retrospective/
 │   └── lab-intake/
-├── tests/                         # 布局、Skill 包结构与公开边界测试
+├── tests/                         # 布局、Skill 包结构、公开边界与微信模块测试
 └── .github/workflows/ci.yml
 ```
 
@@ -218,4 +219,4 @@ Personal-Ontology is an original workbench for letting AI agents maintain knowle
 
 The skills follow the flow of knowledge. **`lab-wx-distillation`** extracts an evidence-bounded personal operating model from existing records (WeChat 4.x exports) with a deterministic local pipeline; **`lab-life-reviewer`** collects what records never captured through interview-led life review; **`lab-retrospective`** audits finished, paused or failed work in conclusion or forensic mode, reports raw-turn and completion-claim coverage as `COMPLETE/PARTIAL`, then decides what deserves to survive with evidence and sample size attached; **`lab-intake`** is the single entry point that turns anything worth keeping into an exact proposal and waits for approval.
 
-The repository root is a catalog; each component contains its authoritative installation, privacy, validation and usage documentation. No private interview content, personal evidence pages or assets are published here.
+The repository root is a catalog; component manuals contain the authoritative installation, privacy, validation and usage documentation; Skill manuals live under `docs/skills/`. No private interview content, personal evidence pages or assets are published here.

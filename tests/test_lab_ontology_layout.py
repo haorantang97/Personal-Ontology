@@ -61,7 +61,7 @@ class LabOntologyLayoutTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("lab-ontology/README.md", readme)
         for name in KNOWLEDGE_SKILLS:
-            self.assertIn(f"skills/{name}/README.md", readme)
+            self.assertIn(f"docs/skills/{name}/README.md", readme)
 
     def test_module_has_human_installation_manual(self):
         readme = (MODULE / "README.md").read_text(encoding="utf-8")
@@ -74,7 +74,7 @@ class LabOntologyLayoutTests(unittest.TestCase):
         for name in KNOWLEDGE_SKILLS:
             skill = (SKILLS / name / "SKILL.md").read_text(encoding="utf-8")
             agent = (SKILLS / name / "agents" / "openai.yaml").read_text(encoding="utf-8")
-            readme = (SKILLS / name / "README.md").read_text(encoding="utf-8")
+            readme = (ROOT / "docs" / "skills" / name / "README.md").read_text(encoding="utf-8")
             self.assertRegex(skill, rf"(?m)^name: {name}$")
             self.assertIn(f"${name}", agent)
             for heading in ("Codex", "Claude Code", "Verify", "Privacy", "Uninstall"):
