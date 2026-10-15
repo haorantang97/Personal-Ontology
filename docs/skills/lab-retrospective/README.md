@@ -8,7 +8,7 @@
 
 从旧名 `lab-knowledge-retrospective` 升级时，先按下文安装 `lab-retrospective` 并确认 Agent 能识别新名称，再删除旧的已安装 Skill 目录；知识库与任务资料无需移动。
 
-安装或复制完整目录。
+安装或复制仓库中的完整 `skills/lab-retrospective/` 目录。人工说明位于 `docs/skills/lab-retrospective/`，不属于安装内容。
 
 ### Community Agent Skills installer
 
@@ -51,7 +51,7 @@ Codex 与 Claude Code 使用同一份 `SKILL.md`。
 ## Optional integrations
 
 - 核心审计协议没有运行时依赖；只要宿主能提供当前任务或用户指定的关联任务历史，就可以执行。历史不完整时仍可交付有边界的报告，但覆盖状态只能是 `PARTIAL`。
-- `agent-knowledge` MCP 网关是可选的方法增强，用于读取当前领域方法，见 [lab-ontology](../../lab-ontology/README.md)。它不可用时仍可执行内置协议，但不得声称已检查方法库。
+- `agent-knowledge` MCP 网关是可选的方法增强，用于读取当前领域方法，见 [lab-ontology](../../../lab-ontology/README.md)。它不可用时仍可执行内置协议，但不得声称已检查方法库。
 - `lab-intake` 只在用户明确要求把批准后的结论写入知识库时需要；普通复盘不依赖它，也不得绕过审批直接写 Vault 或派生索引。
 
 ## Workflow
@@ -60,7 +60,7 @@ Codex 与 Claude Code 使用同一份 `SKILL.md`。
 2. 在选择模式前预检历史完整性、关联任务、纠正与完成声明；历史未知、压缩或截断时先进入法证模式，并保持 `PARTIAL`，直到原始历史和覆盖门证明可以升级。
 3. 选择结论模式或法证模式；失败项目、长对话、多次纠正、跨任务范围和完成声明核验强制进入法证模式。
 4. 通过 `knowledge_route` 和 `knowledge_get` 读取匹配本次事件的当前 method 页。
-5. 法证模式按 [`references/forensic-conversation-audit.md`](references/forensic-conversation-audit.md) 做两遍扫描，建立逐轮、声明、纠正和未闭环四类账本。
+5. 法证模式按 [`references/forensic-conversation-audit.md`](../../../skills/lab-retrospective/references/forensic-conversation-audit.md) 做两遍扫描，建立逐轮、声明、纠正和未闭环四类账本。
 6. 先通过覆盖门；任何历史缺口、漏审轮次或漏核验声明都会强制状态为 `PARTIAL`。
 7. 把过程叙述与可迁移结论分开，为每条候选标注证据、样本量、适用范围和失效条件。
 8. 先把复盘审计交给用户；默认可以没有任何长期知识候选。
@@ -68,8 +68,10 @@ Codex 与 Claude Code 使用同一份 `SKILL.md`。
 
 ## Verify
 
+从仓库根目录运行：
+
 ```bash
-python3 /path/to/skill-creator/scripts/quick_validate.py .
+python3 /path/to/skill-creator/scripts/quick_validate.py skills/lab-retrospective
 ```
 
 并做两类行为验收：
@@ -93,7 +95,7 @@ python3 /path/to/skill-creator/scripts/quick_validate.py .
 
 ## License
 
-本模块采用 [PolyForm Noncommercial License 1.0.0](LICENSE.md)（全文见仓库根目录）：个人与非商业用途可自由使用、修改和分发；商业用途需另行取得著作权人的书面授权。
+本模块采用 [PolyForm Noncommercial License 1.0.0](../../../skills/lab-retrospective/LICENSE.md)（全文见仓库根目录）：个人与非商业用途可自由使用、修改和分发；商业用途需另行取得著作权人的书面授权。
 
 ---
 

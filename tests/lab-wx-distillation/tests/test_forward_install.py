@@ -9,9 +9,9 @@ import unittest
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3] / "skills" / "lab-wx-distillation"
 CLI = ROOT / "scripts" / "pcd.py"
-FIXTURES = ROOT / "tests" / "fixtures" / "wechat4"
+FIXTURES = Path(__file__).parent / "fixtures" / "wechat4"
 SELF = "wxid_self_fixture"
 
 
@@ -120,7 +120,7 @@ class ForwardInstallTests(unittest.TestCase):
             evidence = outside / "evidence.json"
             evidence.write_text(json.dumps([{"evidence_id": "evidence-1", "active": True}, {"evidence_id": "evidence-2", "active": True}]))
             assets = outside / "assets.json"
-            assets.write_text((ROOT / "tests" / "fixtures" / "life_context" / "assets.json").read_text())
+            assets.write_text((Path(__file__).parent / "fixtures" / "life_context" / "assets.json").read_text())
             cards = outside / "cards.json"
             cards.write_text("[]")
             package = self.run_cli(outside, "package-build", ledger, places, evidence, assets, cards, outside / "packages", "synthetic-v2")

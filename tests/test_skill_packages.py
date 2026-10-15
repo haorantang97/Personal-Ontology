@@ -1,12 +1,15 @@
 import re
+import shutil
 import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "skills"
-REQUIRED_FILES = ("SKILL.md", "README.md", "LICENSE.md", "THIRD_PARTY_NOTICES.md", "agents/openai.yaml")
+REQUIRED_FILES = ("SKILL.md", "LICENSE.md", "THIRD_PARTY_NOTICES.md", "agents/openai.yaml")
 README_HEADINGS = ("Installation", "Codex", "Claude Code", "Verify", "Privacy", "Uninstall")
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 
@@ -66,25 +69,44 @@ class SkillPackageTests(unittest.TestCase):
 
     def test_readme_has_human_manual_sections(self):
         for skill in skill_directories():
-            readme = (skill / "README.md").read_text(encoding="utf-8")
+            readme = (ROOT / "docs" / "skills" / skill.name / "README.md").read_text(encoding="utf-8")
             for heading in README_HEADINGS:
                 self.assertIn(heading, readme, f"{skill.name}: README lacks {heading}")
 
-    def test_module_license_points_to_root(self):
+    def test_module_license_is_complete_in_standalone_skills(self):
         root_license = (ROOT / "LICENSE.md").read_text(encoding="utf-8")
         self.assertIn("PolyForm Noncommercial License 1.0.0", root_license)
         self.assertIn("Required Notice:", root_license)
-        for module in [*skill_directories(), ROOT / "lab-ontology"]:
+        for module in skill_directories():
             text = (module / "LICENSE.md").read_text(encoding="utf-8")
-            self.assertIn("PolyForm Noncommercial License 1.0.0", text, module.name)
-            self.assertIn("LICENSE.md", text, module.name)
+            self.assertEqual(text, root_license, module.name)
+        self.assertIn("LICENSE.md", (ROOT / "lab-ontology" / "LICENSE.md").read_text(encoding="utf-8"))
 
     def test_catalog_and_notices_list_every_skill(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         notices = (ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
         for skill in skill_directories():
-            self.assertIn(f"skills/{skill.name}/README.md", readme, skill.name)
+            self.assertIn(f"docs/skills/{skill.name}/README.md", readme, skill.name)
             self.assertIn(f"skills/{skill.name}/THIRD_PARTY_NOTICES.md", notices, skill.name)
+
+    def test_standalone_install_contains_runtime_resources_and_resolves_links(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            for skill in skill_directories():
+                installed = (Path(temporary) / skill.name).resolve()
+                shutil.copytree(skill, installed, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+                for filename in ("README.md", "tests", "evaluations", ".gitignore", "VERIFICATION.md", "CLEAN_ROOM.md", "MIGRATION.md"):
+                    self.assertFalse((installed / filename).exists(), f"development material installed: {skill.name}/{filename}")
+                for document in installed.rglob("*.md"):
+                    for target in re.findall(r"\]\(([^)\s]+)\)", document.read_text(encoding="utf-8")):
+                        if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", target) or target.startswith("#"):
+                            continue
+                        resolved = (document.parent / target.split("#", 1)[0]).resolve()
+                        self.assertTrue(resolved.is_relative_to(installed), f"package-external link: {document.name} -> {target}")
+                        self.assertTrue(resolved.exists(), f"missing installed dependency: {document.name} -> {target}")
+                if skill.name == "lab-wx-distillation":
+                    cli = installed / "scripts" / "pcd.py"
+                    result = subprocess.run([sys.executable, str(cli), "contract-validate", str(installed / "contracts/real-distillation-v2")], cwd=temporary, text=True, capture_output=True)
+                    self.assertEqual(result.returncode, 0, result.stderr)
 
 
 if __name__ == "__main__":

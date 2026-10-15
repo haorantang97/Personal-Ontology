@@ -172,4 +172,3 @@ Run `python3 scripts/pcd.py status /path/to/case`. The append-only ledger is aut
 - What is verified versus pending field work: [field-validation-status.md](references/field-validation-status.md)
 - License implications: [licensing.md](references/licensing.md)
 - Legal and connector exclusion boundary: [legal-and-connector-boundary.md](references/legal-and-connector-boundary.md)
-- Aggregated incident-to-rule/test audit: [incident-rule-coverage.md](docs/incident-rule-coverage.md)

@@ -6,10 +6,10 @@ import unittest
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3] / "skills" / "lab-wx-distillation"
 CLI = ROOT / "scripts" / "pcd.py"
-EPISODES = ROOT / "tests" / "fixtures" / "life_context" / "routed_episodes.json"
-FIELD_EVIDENCE = ROOT / "tests" / "fixtures" / "field_evidence" / "travel-v105-v106.json"
+EPISODES = Path(__file__).parent / "fixtures" / "life_context" / "routed_episodes.json"
+FIELD_EVIDENCE = Path(__file__).parent / "fixtures" / "field_evidence" / "travel-v105-v106.json"
 
 
 class V2CLITests(unittest.TestCase):

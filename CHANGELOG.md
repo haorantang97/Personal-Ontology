@@ -6,6 +6,8 @@ tags (`vX.Y.Z`). Module-internal versions are noted in the entries.
 
 ## [Unreleased]
 
+- 将 Skill 安装手册、开发验证记录与测试移至仓库文档/测试目录；安装包保留完整许可与运行依赖，并增加隔离安装检查。
+
 ### Added
 
 - `lab-trust-core` — a standalone, MIT-licensed trust-policy core with SDK,

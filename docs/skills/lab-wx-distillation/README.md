@@ -1,16 +1,16 @@
 # Lab WX Distillation
 
-> **中文摘要** — `lab-wx-distillation` 是一条确定性的本地 Python 流水线，把你授权的微信 4.x 聊天数据变成有证据边界的个人上下文。采集、解密适配和身份脱敏全部在本机完成，模型只看到密封过的脱敏数据包；每条路由恰好产生一个处理结果，事件各自带语义状态，完整事件账本是权威。当前为 v2.0.1，在合成/公开 fixture 上通过 150 个测试；**不**宣称与任何具体微信构建的真机兼容。安装、验证、隐私边界、升级与卸载说明见下文（英文）。运行前必读 [STATUS.md](STATUS.md)、[privacy-and-authorization.md](references/privacy-and-authorization.md) 与 [platform-connectors.md](references/platform-connectors.md)。
+> **中文摘要** — `lab-wx-distillation` 是一条确定性的本地 Python 流水线，把你授权的微信 4.x 聊天数据变成有证据边界的个人上下文。采集、解密适配和身份脱敏全部在本机完成，模型只看到密封过的脱敏数据包；每条路由恰好产生一个处理结果，事件各自带语义状态，完整事件账本是权威。当前为 v2.0.1，在合成/公开 fixture 上通过 150 个测试；**不**宣称与任何具体微信构建的真机兼容。安装、验证、隐私边界、升级与卸载说明见下文（英文）。运行前必读 [STATUS.md](../../../skills/lab-wx-distillation/STATUS.md)、[privacy-and-authorization.md](../../../skills/lab-wx-distillation/references/privacy-and-authorization.md) 与 [platform-connectors.md](../../../skills/lab-wx-distillation/references/platform-connectors.md)。
 
 `lab-wx-distillation` is a provider-neutral Agent Skill and deterministic local pipeline primarily for turning user-approved WeChat 4.x data into evidence-bounded personal context. Lawful standard conversation exports remain available as a fallback ingestion boundary; they do not make this a general-purpose multi-platform importer.
 
-It is not prompt-only. The directory contains the Skill entrypoint, Python controller, platform connectors, immutable contracts, synthetic fixtures, tests, privacy rules, validation gates, and portable runtime packaging.
+It is not prompt-only. The installable `skills/lab-wx-distillation/` directory contains the Skill entrypoint, Python controller, platform connectors, immutable contracts, privacy rules, validation gates, and portable runtime packaging. Synthetic fixtures and development tests live separately in `tests/lab-wx-distillation/`.
 
-Current truth: the executable paths are verified with synthetic/public fixtures. Compatibility with a particular real macOS or Windows WeChat build is not claimed until that build passes the field checklist. See [STATUS.md](STATUS.md) and the [feature matrix](docs/feature-implementation-matrix.md).
+Current truth: the executable paths are verified with synthetic/public fixtures. Compatibility with a particular real macOS or Windows WeChat build is not claimed until that build passes the field checklist. See [STATUS.md](../../../skills/lab-wx-distillation/STATUS.md) and the [feature matrix](../../../skills/lab-wx-distillation/docs/feature-implementation-matrix.md).
 
 ## Installation
 
-Install or copy this whole directory. Installing only `SKILL.md` removes the deterministic pipeline and is unsupported.
+Install or copy the complete `skills/lab-wx-distillation/` directory from the repository. This documentation directory is not the installation source. Installing only `SKILL.md` removes the deterministic pipeline and is unsupported.
 
 ### Community Agent Skills installer
 
@@ -52,11 +52,11 @@ For the current user, copy it to:
 ~/.claude/skills/lab-wx-distillation/
 ```
 
-Reload Claude Code and invoke the Skill by name. The same `SKILL.md`, scripts, contracts, and tests are used; there is no separate Claude implementation.
+Reload Claude Code and invoke the Skill by name. The same `SKILL.md`, scripts, and contracts are used; there is no separate Claude implementation.
 
 ### Direct repository use
 
-An Agent installation is optional. Clone the repository, enter this directory, and run:
+An Agent installation is optional. Clone the repository, enter `skills/lab-wx-distillation/`, and run:
 
 ```bash
 python3 scripts/pcd.py --help
@@ -74,13 +74,19 @@ No model vendor, model name, Fast mode, or fixed agent count is required by the 
 
 ## Verify
 
-Run from this directory:
+Run from the installed Skill directory or `skills/lab-wx-distillation/` in a checkout:
 
 ```bash
-PYTHONPATH=scripts python3 -m unittest discover -s tests -p 'test_*.py'
 python3 -m compileall -q scripts
 python3 scripts/pcd.py contract-validate contracts/real-distillation-v2
 python3 scripts/pcd.py --help
+```
+
+For the development regression suite, run from the repository root:
+
+```bash
+cd tests/lab-wx-distillation
+PYTHONPATH=../../skills/lab-wx-distillation/scripts python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
 The contract command must report bundle SHA-256:
@@ -89,22 +95,22 @@ The contract command must report bundle SHA-256:
 e2f27026522d8c5a78c20f4d8744bc997611d84f49a91e85c23c0ce376588500
 ```
 
-For Agent Skill structure validation:
+For Agent Skill structure validation, run from the repository root:
 
 ```bash
-python3 /path/to/skill-creator/scripts/quick_validate.py .
+python3 /path/to/skill-creator/scripts/quick_validate.py skills/lab-wx-distillation
 ```
 
 ## First safe run
 
-Keep every case outside the installed Skill directory:
+Run from the installed Skill directory; keep every case outside it:
 
 ```bash
 python3 scripts/pcd.py init /path/to/case
 python3 scripts/pcd.py authorize /path/to/case new_source --note "user approved this source"
 ```
 
-Continue with the commands in [SKILL.md](SKILL.md). The controller separates local collection and validation from model processing. An analysis request authorizes processing data already redacted for the current task; it does not authorize a new source, unredacted transfer, local-key access, or knowledge-base writing.
+Continue with the commands in [SKILL.md](../../../skills/lab-wx-distillation/SKILL.md). The controller separates local collection and validation from model processing. An analysis request authorizes processing data already redacted for the current task; it does not authorize a new source, unredacted transfer, local-key access, or knowledge-base writing.
 
 ## Privacy
 
@@ -114,13 +120,13 @@ Continue with the commands in [SKILL.md](SKILL.md). The controller separates loc
 - Knowledge-base approval creates a receipt only. An external write remains a separate, explicitly authorized action.
 - Synthetic tests contain no real chats, identities, keys, or private receipts.
 
-Read [privacy-and-authorization.md](references/privacy-and-authorization.md) before handling a source and [platform-connectors.md](references/platform-connectors.md) before touching WeChat data.
+Read [privacy-and-authorization.md](../../../skills/lab-wx-distillation/references/privacy-and-authorization.md) before handling a source and [platform-connectors.md](../../../skills/lab-wx-distillation/references/platform-connectors.md) before touching WeChat data.
 
 ## Upgrade
 
 Replace the installed module only with a reviewed newer release. Do not overwrite case directories or immutable releases. Before resuming a case, validate the new contract bundle and use the explicit profile update/re-extraction state machine; accepted Map generations are not rerun automatically.
 
-If upgrading from `lab-context-distillation-wx` or the earlier `lab-context-distillation` public name, install this directory under `lab-wx-distillation`, verify discovery and the frozen contract, then remove only the former installed Skill directory. Case directories remain outside the Skill package and do not move.
+If upgrading from `lab-context-distillation-wx` or the earlier `lab-context-distillation` public name, install `skills/lab-wx-distillation/` under `lab-wx-distillation`, verify discovery and the frozen contract, then remove only the former installed Skill directory. Case directories remain outside the Skill package and do not move.
 
 Historical release manifests under `versions/` remain read-only. They preserve the standalone project's earlier identifiers and hashes for provenance.
 
@@ -138,7 +144,7 @@ Remove only the installed `lab-wx-distillation` directory from the Agent skills 
 
 ## License
 
-The module is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE.md) (full text in the repository root). Personal and noncommercial use, modification and distribution are permitted; any commercial use requires a separate written license from the copyright holder.
+The module is licensed under the [PolyForm Noncommercial License 1.0.0](../../../skills/lab-wx-distillation/LICENSE.md) (full text in the repository root). Personal and noncommercial use, modification and distribution are permitted; any commercial use requires a separate written license from the copyright holder.
 
 ## Provenance
 

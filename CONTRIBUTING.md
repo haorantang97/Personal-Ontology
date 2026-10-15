@@ -26,7 +26,7 @@
 
 - 任何提交都不得包含私人绝对路径、Raw 访谈、聊天原文、身份、密钥、个人证据页或资产文件。自动测试会扫描私人绝对路径等机械边界，但不能替代对 Raw 内容、身份和密钥的人工审查。
 - `lab-ontology/vault/` 的六个内容目录永远只含 `.gitkeep`。
-- 新增模块必须自带 `README.md`（含 Installation、Verify、Privacy、Uninstall）、`LICENSE.md`（指向根目录）、`THIRD_PARTY_NOTICES.md`，并在根 README 目录和 `THIRD_PARTY_NOTICES.md` 登记。
+- 新增模块必须提供说明文档（含 Installation、Verify、Privacy、Uninstall）、`LICENSE.md`、`THIRD_PARTY_NOTICES.md`，并在根 README 目录和 `THIRD_PARTY_NOTICES.md` 登记。Skill 的人工说明放在 `docs/skills/{name}/README.md`，开发测试放在仓库 `tests/`；`skills/{name}/` 只保留运行文件、必需参考资料和完整许可声明。其他模块保留自己的 README 布局。
 
 ## 语言
 
